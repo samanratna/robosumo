@@ -1,16 +1,11 @@
 #include <Arduino.h>
 
-// #define TRIG_PIN 9
-// #define ECHO_PIN 10
+#define TRIG_PIN 9
+#define ECHO_PIN 10
 
-// long duration;
-// float distance_cm;
+long duration;
+float distance_cm;
 
-// void setup() {
-//   Serial.begin(9600);      // Start serial communication
-//   pinMode(TRIG_PIN, OUTPUT);
-//   pinMode(ECHO_PIN, INPUT);
-// }
 
   /* Ardumoto Example Sketch
   by: Jim Lindblom`
@@ -22,13 +17,13 @@
   date: March 31, 2017
 
   Three useful functions are defined:
-    setupArdumoto() -- Setup the Ardumoto Shield pins
+    motorsInit() -- Setup the Ardumoto Shield pins
     drive([motor], [direction], [speed]) -- Drive [motor] 
       (0 for A, 1 for B) in [direction] (0 or 1) at a [speed]
       between 0 and 255. It will spin until told to stop.
     stopDrive([motor]) -- Stop driving [motor] (0 or 1).
 
-  setupArdumoto() is called in the setup().
+  motorsInit() is called in the setup().
   The loop() demonstrates use of the motor driving functions.
 */
 
@@ -37,7 +32,7 @@
 #define FORWARD  0
 #define REVERSE 1
 
-// Motor definitions to make life easier:
+// Motor definitions
 #define MOTOR_RIGHT 0
 #define MOTOR_LEFT 1
 
@@ -50,16 +45,26 @@
 
 #define ONBOARD_LED 13 // On-board LED
 
-void setupArdumoto(void);
+
+// Function Prototypes
+void motorsInit(void);
+void ultrasonicSensorInit(void);
 void drive(byte motor, byte dir, byte spd);
 void stopDrive(byte motor);
+void rotateRight(byte spd);
+void rotateLeft(byte spd);
+float getDistance(void);
+
 
 void setup()
 {
-  setupArdumoto(); // Set all pins as outputs
-  digitalWrite(ONBOARD_LED, HIGH); // Turn on the on-board LED to show we're running
+  motorsInit();
+  ultrasonicSensorInit();
+
+  digitalWrite(ONBOARD_LED, HIGH); // Turn on the on-board LED to show all the peripherals are initialized
+
   Serial.begin(9600); // Start serial communication at 9600 baud
-  Serial.println("Ardumoto Example Sketch");
+  Serial.println("Starting main codebase here...");
 }
 
 void loop()
@@ -94,7 +99,14 @@ void loop()
   // stopDrive(MOTOR_RIGHT);  // STOP motor A 
   // stopDrive(MOTOR_LEFT);  // STOP motor B 
 
+  distance_cm = getDistance();
+  Serial.println("Calculated distance is ");
+  Serial.println(distance_cm);
+
 }
+
+
+
 
 // drive drives 'motor' in 'dir' direction at 'spd' speed
 void drive(byte motor, byte dir, byte spd)
@@ -111,27 +123,43 @@ void drive(byte motor, byte dir, byte spd)
   }  
 }
 
-
 // stopDrive makes a motor stop
 void stopDrive(byte motor)
 {
   drive(motor, 0, 0);
 }
 
-// setupArdumoto initialize all pins
-void setupArdumoto()
+void rotateRight(byte spd)
+{
+  drive(MOTOR_RIGHT, REVERSE, spd);
+  drive(MOTOR_LEFT, FORWARD, spd);
+}
+
+void rotateLeft(byte spd)
+{
+  drive(MOTOR_RIGHT, FORWARD, spd);
+  drive(MOTOR_LEFT, REVERSE, spd);
+}
+
+// motorsInit initialize all pins
+void motorsInit()
 {
   // All pins should be setup as outputs:
   pinMode(PWM_MOTOR_RIGHT, OUTPUT);
-  pinMode(PWM_MOTOR_LEFT, OUTPUT);
   pinMode(DIR_MOTOR_RIGHT, OUTPUT);
+  
+  pinMode(PWM_MOTOR_LEFT, OUTPUT);
   pinMode(DIR_MOTOR_LEFT, OUTPUT);
 
-  // Initialize all pins as low:
-  digitalWrite(PWM_MOTOR_RIGHT, LOW);
-  digitalWrite(PWM_MOTOR_LEFT, LOW);
-  digitalWrite(DIR_MOTOR_RIGHT, LOW);
-  digitalWrite(DIR_MOTOR_LEFT, LOW);
+  stopDrive(MOTOR_RIGHT);  // STOP right motor
+  stopDrive(MOTOR_LEFT);  // STOP left motor 
+
+}
+
+void ultrasonicSensorInit(void)
+{
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
 }
 
 
@@ -140,28 +168,31 @@ void setupArdumoto()
 
 
 
-// void distance_calculation(void)
-// {
-//   // Clear the trig pin
-//   delayMicroseconds(2);
-//   digitalWrite(TRIG_PIN, LOW);
-//   delayMicroseconds(2);
+float getDistance(void)
+{
+  float calculated_distance;
+  // Clear the trig pin
+  delayMicroseconds(2);
+  digitalWrite(TRIG_PIN, LOW);
+  delayMicroseconds(2);
 
-//   // Send a 10 µs HIGH pulse
-//   digitalWrite(TRIG_PIN, HIGH);
-//   delayMicroseconds(10);
-//   digitalWrite(TRIG_PIN, LOW);
+  // Send a 10 µs HIGH pulse
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
 
-//   // Read echo pin
-//   duration = pulseIn(ECHO_PIN, HIGH);
+  // Read echo pin
+  duration = pulseIn(ECHO_PIN, HIGH);
 
-//   // Convert to distance (cm)
-//   distance_cm = (duration * 0.0343) / 2;
+  // Convert to distance (cm)
+  calculated_distance = (duration * 0.0343) / 2;
 
-//   // Print result
-//   Serial.print("Distance: ");
-//   Serial.print(distance_cm);
-//   Serial.println(" cm");
+  // Print result
+  // Serial.print("Distance: ");
+  // Serial.print(distance_cm);
+  // Serial.println(" cm");
 
-//   delay(500);
-// }
+  delay(100);
+
+  return calculated_distance;
+}
