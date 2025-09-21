@@ -1,47 +1,32 @@
 #include <Arduino.h>
 
 #define TRIG_PIN 9
-#define ECHO_PIN 10
+#define ECHO_PIN 2
 
 long duration;
 float distance_cm;
 
+volatile unsigned long startTime = 0;
+volatile unsigned long endTime = 0;
+volatile bool measurementDone = false;
 
-  /* Ardumoto Example Sketch
-  by: Jim Lindblom`
-  date: November 8, 2013
-  license: Public domain. Please use, reuse, and modify this 
-  sketch!
+const int threshold = 30; // cm
+bool thresholdTriggered = false;
 
-  Adapted to v20 hardware by: Marshall Taylor
-  date: March 31, 2017
-
-  Three useful functions are defined:
-    motorsInit() -- Setup the Ardumoto Shield pins
-    drive([motor], [direction], [speed]) -- Drive [motor] 
-      (0 for A, 1 for B) in [direction] (0 or 1) at a [speed]
-      between 0 and 255. It will spin until told to stop.
-    stopDrive([motor]) -- Stop driving [motor] (0 or 1).
-
-  motorsInit() is called in the setup().
-  The loop() demonstrates use of the motor driving functions.
-*/
-
-// Clockwise and counter-clockwise definitions.
-// Depending on how you wired your motors, you may need to swap.
+// Clockwise and counter-clockwise definitions
 #define FORWARD  0
 #define REVERSE 1
 
 // Motor definitions
-#define MOTOR_RIGHT 0
-#define MOTOR_LEFT 1
+#define MOTOR_RIGHT 1
+#define MOTOR_LEFT 0
 
 // Pin Assignments //
-#define DIR_MOTOR_RIGHT 2  // Direction control for motor RIGHT
-#define PWM_MOTOR_RIGHT 3  // PWM control (speed) for motor RIGHT
+#define DIR_MOTOR_RIGHT 4  // Direction control for motor RIGHT
+#define PWM_MOTOR_RIGHT 11  // PWM control (speed) for motor RIGHT
 
-#define DIR_MOTOR_LEFT 4  // Direction control for motor LEFT
-#define PWM_MOTOR_LEFT 11 // PWM control (speed) for motor LEFT
+#define DIR_MOTOR_LEFT 10  // Direction control for motor LEFT
+#define PWM_MOTOR_LEFT 3 // PWM control (speed) for motor LEFT
 
 #define ONBOARD_LED 13 // On-board LED
 
@@ -53,9 +38,13 @@ void drive(byte motor, byte dir, byte spd);
 void stopDrive(byte motor);
 void rotateRight(byte spd);
 void rotateLeft(byte spd);
+void moveForward(byte spd);
+void moveBackward(byte spd);
 float getDistance(void);
+void echoISR(void);
 
 
+/// @brief Arduino setup function
 void setup()
 {
   motorsInit();
@@ -64,48 +53,92 @@ void setup()
   digitalWrite(ONBOARD_LED, HIGH); // Turn on the on-board LED to show all the peripherals are initialized
 
   Serial.begin(9600); // Start serial communication at 9600 baud
+
+  // Attach interrupt on ECHO pin
+  attachInterrupt(digitalPinToInterrupt(ECHO_PIN), echoISR, CHANGE);
+
   Serial.println("Starting main codebase here...");
 }
 
+
+/// @brief Arduino main loop function
 void loop()
 {
   // Drive motor A (and only motor A) at various speeds, then stop.
-  drive(MOTOR_RIGHT, REVERSE, 255); // Set motor A to REVERSE at max
-  delay(1000);  // Motor A will spin as set for 1 second
-  drive(MOTOR_RIGHT, FORWARD, 127);  // Set motor A to FORWARD at half
-  delay(1000);  // Motor A will keep trucking for 1 second 
-  stopDrive(MOTOR_RIGHT);  // STOP motor A 
+  // rotateRight(64);
+  // delay(2000);
+  // rotateLeft(64);
+  // delay(2000);
+  // moveForward(64);
+  // delay(2000);
+  // moveBackward(64);
+  // delay(2000);
+  // stopDrive(MOTOR_RIGHT);
+  // stopDrive(MOTOR_LEFT);
+  // delay(1000);
 
-  // Drive motor B (and only motor B) at various speeds, then stop.
-  drive(MOTOR_LEFT, REVERSE, 255); // Set motor B to REVERSE at max
-  delay(1000);  // Motor B will spin as set for 1 second
-  drive(MOTOR_LEFT, FORWARD, 127);  // Set motor B to FORWARD at half
-  delay(1000);  // Motor B will keep trucking for 1 second
-  stopDrive(MOTOR_LEFT);  // STOP motor B 
+  // getObstacle = findObstacle();
 
-  // Drive both
-  drive(MOTOR_RIGHT, FORWARD, 255);  // Motor A at max speed.
-  // drive(MOTOR_LEFT, FORWARD, 255);  // Motor B at max speed.
-  // delay(1000);  // Drive forward for a second
-  // // Now go backwards at half that speed:
-  // drive(MOTOR_RIGHT, REVERSE, 127);  // Motor A at max speed.
-  // drive(MOTOR_LEFT, REVERSE, 127);  // Motor B at max speed.
-  // delay(1000);  // Drive forward for a second
+  // if (getObstacle)
+  // {
+  //   moveForward(64); // Move forward if no obstacle is detected
+  // }
 
-  // // Now spin in place!
-  // drive(MOTOR_RIGHT, FORWARD, 255);  // Motor A at max speed.
-  // drive(MOTOR_LEFT, REVERSE, 255);  // Motor B at max speed.
-  // delay(2000);  // Drive forward for a second
-  // stopDrive(MOTOR_RIGHT);  // STOP motor A 
-  // stopDrive(MOTOR_LEFT);  // STOP motor B 
+  // float calculated_distance;
 
-  distance_cm = getDistance();
-  Serial.println("Calculated distance is ");
-  Serial.println(distance_cm);
+
+  // Clear the trig pin
+  delayMicroseconds(2);
+  digitalWrite(TRIG_PIN, LOW);
+  delayMicroseconds(2);
+
+  // Send a 10 µs HIGH pulse
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+
+  delay(100); // wait before next measurement
+  // Serial.println("Measuring distance...");
+
+  if (measurementDone) {
+    // Serial.println("Measurement done, processing...");
+    unsigned long duration = endTime - startTime;
+    int distance = duration * 0.034 / 2;  // convert to cm
+
+    Serial.print("Distance = ");
+    Serial.print(distance);
+    Serial.println(" cm");
+
+    if (distance <= threshold) {
+      thresholdTriggered = true;
+    } else {
+      thresholdTriggered = false;
+    }
+
+
+    /*
+    30 -> 127
+    0 -> 64
+    */
+    // Act on threshold
+    if (thresholdTriggered) {
+      // Serial.println("Threshold triggered action!");
+      digitalWrite(LED_BUILTIN, HIGH); // LED ON when distance <= 30 cm
+      Serial.println("⚠️ Threshold reached!");
+      moveForward(64 + (2*distance));
+    } else {
+      digitalWrite(LED_BUILTIN, LOW); // LED OFF otherwise
+      stopDrive(MOTOR_RIGHT);
+      stopDrive(MOTOR_LEFT);
+    }
+
+    measurementDone = false; // reset flag
+  } else {
+    Serial.println("Waiting for measurement to complete...");
+  }
+
 
 }
-
-
 
 
 // drive drives 'motor' in 'dir' direction at 'spd' speed
@@ -123,23 +156,45 @@ void drive(byte motor, byte dir, byte spd)
   }  
 }
 
-// stopDrive makes a motor stop
+
+//  motor stop
 void stopDrive(byte motor)
 {
   drive(motor, 0, 0);
 }
 
+
+// rotate right
 void rotateRight(byte spd)
 {
   drive(MOTOR_RIGHT, REVERSE, spd);
   drive(MOTOR_LEFT, FORWARD, spd);
 }
 
+
+// rotate left
 void rotateLeft(byte spd)
 {
   drive(MOTOR_RIGHT, FORWARD, spd);
   drive(MOTOR_LEFT, REVERSE, spd);
 }
+
+
+// forward
+void moveForward(byte spd)
+{
+  drive(MOTOR_RIGHT, FORWARD, spd);
+  drive(MOTOR_LEFT, FORWARD, spd);
+}
+
+
+// backward
+void moveBackward(byte spd)
+{
+  drive(MOTOR_RIGHT, REVERSE, spd);
+  drive(MOTOR_LEFT, REVERSE, spd);
+}
+
 
 // motorsInit initialize all pins
 void motorsInit()
@@ -156,6 +211,8 @@ void motorsInit()
 
 }
 
+
+// initialize ultrasonic sensor
 void ultrasonicSensorInit(void)
 {
   pinMode(TRIG_PIN, OUTPUT);
@@ -163,11 +220,7 @@ void ultrasonicSensorInit(void)
 }
 
 
-
-
-
-
-
+// get distance from ultrasonic sensor
 float getDistance(void)
 {
   float calculated_distance;
@@ -187,12 +240,19 @@ float getDistance(void)
   // Convert to distance (cm)
   calculated_distance = (duration * 0.0343) / 2;
 
-  // Print result
-  // Serial.print("Distance: ");
-  // Serial.print(distance_cm);
-  // Serial.println(" cm");
-
-  delay(100);
+  delay(50);
 
   return calculated_distance;
+}
+
+
+// Interrupt Service Routine for echo pin
+void echoISR() {
+  // Serial.println("Echo HIGH detected, starting timer...");
+  if (digitalRead(ECHO_PIN) == HIGH) {
+    startTime = micros();   // echo pulse started
+  } else {
+    endTime = micros();     // echo pulse ended
+    measurementDone = true; // signal main loop
+  }
 }
