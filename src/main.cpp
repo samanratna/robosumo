@@ -6,10 +6,6 @@
 long duration;
 float distance_cm;
 
-volatile unsigned long startTime = 0;
-volatile unsigned long endTime = 0;
-volatile bool measurementDone = false;
-
 const int threshold = 30; // cm
 bool thresholdTriggered = false;
 
@@ -41,7 +37,6 @@ void rotateLeft(byte spd);
 void moveForward(byte spd);
 void moveBackward(byte spd);
 float getDistance(void);
-void echoISR(void);
 
 
 /// @brief Arduino setup function
@@ -50,13 +45,10 @@ void setup()
   motorsInit();
   ultrasonicSensorInit();
 
-  digitalWrite(ONBOARD_LED, HIGH); // Turn on the on-board LED to show all the peripherals are initialized
+  pinMode(ONBOARD_LED, OUTPUT);
+  digitalWrite(ONBOARD_LED, HIGH); // Show peripherals initialized
 
-  Serial.begin(9600); // Start serial communication at 9600 baud
-
-  // Attach interrupt on ECHO pin
-  attachInterrupt(digitalPinToInterrupt(ECHO_PIN), echoISR, CHANGE);
-
+  Serial.begin(9600); // Start serial communication
   Serial.println("Starting main codebase here...");
 }
 
@@ -64,66 +56,45 @@ void setup()
 /// @brief Arduino main loop function
 void loop()
 {
+  // moveBackward(64); // Move backward at speed 64
+  // moveForward(64);  // Move forward at speed 64
+  
+  // Get distance by polling
+  float distance = getDistance();
 
-  // Clear the trig pin
-  delayMicroseconds(2);
-  digitalWrite(TRIG_PIN, LOW);
-  delayMicroseconds(2);
+  Serial.print("Distance = ");
+  Serial.print(distance);
+  Serial.println(" cm");
 
-  // Send a 10 µs HIGH pulse
-  digitalWrite(TRIG_PIN, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(TRIG_PIN, LOW);
-
-  delay(100); // wait before next measurement
-
-  if (measurementDone) {
-    unsigned long duration = endTime - startTime;
-    int distance = duration * 0.034 / 2;  // convert to cm
-
-    Serial.print("Distance = ");
-    Serial.print(distance);
-    Serial.println(" cm");
-
-    if (distance <= threshold) {
-      thresholdTriggered = true;
-    } else {
-      thresholdTriggered = false;
-    }
-
-
-    /*
-    30 -> 127
-    0 -> 64
-    */
-    // Act on threshold
-    if (thresholdTriggered) {
-      digitalWrite(LED_BUILTIN, HIGH); // LED ON when distance <= 30 cm
-      Serial.println("⚠️ Threshold reached!");
-      moveForward(64 + (2*distance));
-    } else {
-      digitalWrite(LED_BUILTIN, LOW); // LED OFF otherwise
-      stopDrive(MOTOR_RIGHT);
-      stopDrive(MOTOR_LEFT);
-    }
-
-    measurementDone = false; // reset flag
+  // Threshold check
+  if (distance <= threshold) {
+    thresholdTriggered = true;
   } else {
-    Serial.println("Waiting for measurement to complete...");
+    thresholdTriggered = false;
   }
+
+  // Act on threshold
+  if (thresholdTriggered) {
+    digitalWrite(LED_BUILTIN, HIGH); // LED ON when distance <= 30 cm
+    Serial.println("⚠️ Threshold reached!");
+    moveForward(64); // scale motor speed
+  } else {
+    digitalWrite(LED_BUILTIN, LOW); // LED OFF otherwise
+    moveBackward(64);
+  }
+
+  delay(100); // Wait before next measurement
 }
 
 
 // drive drives 'motor' in 'dir' direction at 'spd' speed
 void drive(byte motor, byte dir, byte spd)
 {
-  if (motor == MOTOR_RIGHT)
-  {
+  if (motor == MOTOR_RIGHT) {
     digitalWrite(DIR_MOTOR_RIGHT, dir);
     analogWrite(PWM_MOTOR_RIGHT, spd);
   }
-  else if (motor == MOTOR_LEFT)
-  {
+  else if (motor == MOTOR_LEFT) {
     digitalWrite(DIR_MOTOR_LEFT, dir);
     analogWrite(PWM_MOTOR_LEFT, spd);
   }  
@@ -180,8 +151,7 @@ void motorsInit()
   pinMode(DIR_MOTOR_LEFT, OUTPUT);
 
   stopDrive(MOTOR_RIGHT);  // STOP right motor
-  stopDrive(MOTOR_LEFT);  // STOP left motor 
-
+  stopDrive(MOTOR_LEFT);   // STOP left motor 
 }
 
 
@@ -193,12 +163,10 @@ void ultrasonicSensorInit(void)
 }
 
 
-// get distance from ultrasonic sensor
+// get distance from ultrasonic sensor (polling mode)
 float getDistance(void)
 {
-  float calculated_distance;
   // Clear the trig pin
-  delayMicroseconds(2);
   digitalWrite(TRIG_PIN, LOW);
   delayMicroseconds(2);
 
@@ -207,22 +175,10 @@ float getDistance(void)
   delayMicroseconds(10);
   digitalWrite(TRIG_PIN, LOW);
 
-  // Read echo pin
-  duration = pulseIn(ECHO_PIN, HIGH);
+  // Read echo pin duration using polling
+  duration = pulseIn(ECHO_PIN, HIGH, 30000UL); // timeout = 30 ms (~5 m range)
 
   // Convert to distance (cm)
-  calculated_distance = (duration * 0.0343) / 2;
-  delay(50);
+  float calculated_distance = (duration * 0.0343) / 2;
   return calculated_distance;
-}
-
-
-// Interrupt Service Routine for echo pin
-void echoISR() {
-  if (digitalRead(ECHO_PIN) == HIGH) {
-    startTime = micros();   // echo pulse started
-  } else {
-    endTime = micros();     // echo pulse ended
-    measurementDone = true; // signal main loop
-  }
 }
