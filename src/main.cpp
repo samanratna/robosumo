@@ -64,28 +64,6 @@ void setup()
 /// @brief Arduino main loop function
 void loop()
 {
-  // Drive motor A (and only motor A) at various speeds, then stop.
-  // rotateRight(64);
-  // delay(2000);
-  // rotateLeft(64);
-  // delay(2000);
-  // moveForward(64);
-  // delay(2000);
-  // moveBackward(64);
-  // delay(2000);
-  // stopDrive(MOTOR_RIGHT);
-  // stopDrive(MOTOR_LEFT);
-  // delay(1000);
-
-  // getObstacle = findObstacle();
-
-  // if (getObstacle)
-  // {
-  //   moveForward(64); // Move forward if no obstacle is detected
-  // }
-
-  // float calculated_distance;
-
 
   // Clear the trig pin
   delayMicroseconds(2);
@@ -98,10 +76,8 @@ void loop()
   digitalWrite(TRIG_PIN, LOW);
 
   delay(100); // wait before next measurement
-  // Serial.println("Measuring distance...");
 
   if (measurementDone) {
-    // Serial.println("Measurement done, processing...");
     unsigned long duration = endTime - startTime;
     int distance = duration * 0.034 / 2;  // convert to cm
 
@@ -122,7 +98,6 @@ void loop()
     */
     // Act on threshold
     if (thresholdTriggered) {
-      // Serial.println("Threshold triggered action!");
       digitalWrite(LED_BUILTIN, HIGH); // LED ON when distance <= 30 cm
       Serial.println("⚠️ Threshold reached!");
       moveForward(64 + (2*distance));
@@ -136,8 +111,6 @@ void loop()
   } else {
     Serial.println("Waiting for measurement to complete...");
   }
-
-
 }
 
 
@@ -239,16 +212,13 @@ float getDistance(void)
 
   // Convert to distance (cm)
   calculated_distance = (duration * 0.0343) / 2;
-
   delay(50);
-
   return calculated_distance;
 }
 
 
 // Interrupt Service Routine for echo pin
 void echoISR() {
-  // Serial.println("Echo HIGH detected, starting timer...");
   if (digitalRead(ECHO_PIN) == HIGH) {
     startTime = micros();   // echo pulse started
   } else {
