@@ -17,15 +17,15 @@ bool thresholdTriggered = false;
 #define FORWARD  0
 #define REVERSE 1
 
-// Motor definitions
-#define MOTOR_RIGHT 1
-#define MOTOR_LEFT 0
+// // Motor definitions
+#define MOTOR_RIGHT 0
+#define MOTOR_LEFT 1
 
 // Pin Assignments //
 #define DIR_MOTOR_RIGHT 4  // Direction control for motor RIGHT
 #define PWM_MOTOR_RIGHT 11  // PWM control (speed) for motor RIGHT
 
-#define DIR_MOTOR_LEFT 10  // Direction control for motor LEFT
+#define DIR_MOTOR_LEFT 2  // Direction control for motor LEFT
 #define PWM_MOTOR_LEFT 3 // PWM control (speed) for motor LEFT
 
 #define ONBOARD_LED 13 // On-board LED
@@ -48,14 +48,19 @@ void echoISR(void);
 void setup()
 {
   motorsInit();
-  ultrasonicSensorInit();
+  // ultrasonicSensorInit();
 
-  digitalWrite(ONBOARD_LED, HIGH); // Turn on the on-board LED to show all the peripherals are initialized
+  // digitalWrite(ONBOARD_LED, HIGH); // Turn on the on-board LED to show all the peripherals are initialized
 
   Serial.begin(9600); // Start serial communication at 9600 baud
 
   // Attach interrupt on ECHO pin
-  attachInterrupt(digitalPinToInterrupt(ECHO_PIN), echoISR, CHANGE);
+  // attachInterrupt(digitalPinToInterrupt(ECHO_PIN), echoISR, CHANGE);
+
+  pinMode(ONBOARD_LED, OUTPUT);
+
+  pinMode(8, INPUT);
+
 
   Serial.println("Starting main codebase here...");
 }
@@ -64,53 +69,112 @@ void setup()
 /// @brief Arduino main loop function
 void loop()
 {
+  // int IR_state = digitalRead(8);
+  // Serial.println(IR_state);
 
-  // Clear the trig pin
-  delayMicroseconds(2);
-  digitalWrite(TRIG_PIN, LOW);
-  delayMicroseconds(2);
+  // moveBackward(128); // rotate in place when no obstacle is near
+  // delay(1000);
+  // moveForward(128); // rotate in place when no obstacle is near
+  // delay(1000);
+  
+  // drive(MOTOR_RIGHT, REVERSE, 255);
+  // delay(1000);
+  // stopDrive(MOTOR_RIGHT);
+  // delay(500);
+  // drive(MOTOR_RIGHT, FORWARD, 255);
+  // delay(1000);
+  // stopDrive(MOTOR_RIGHT);
+  // delay(500);
 
-  // Send a 10 µs HIGH pulse
-  digitalWrite(TRIG_PIN, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(TRIG_PIN, LOW);
+  digitalWrite(DIR_MOTOR_LEFT, HIGH);
+  digitalWrite(DIR_MOTOR_RIGHT, LOW);
+  analogWrite(PWM_MOTOR_RIGHT, 80);
+  delay(2000);
 
-  delay(100); // wait before next measurement
+  digitalWrite(DIR_MOTOR_LEFT, LOW);
+  digitalWrite(DIR_MOTOR_RIGHT, HIGH);
+  analogWrite(PWM_MOTOR_LEFT, 80);
+  delay(2000);
 
-  if (measurementDone) {
-    unsigned long duration = endTime - startTime;
-    int distance = duration * 0.034 / 2;  // convert to cm
+  digitalWrite(DIR_MOTOR_LEFT, LOW);
+  digitalWrite(DIR_MOTOR_RIGHT, HIGH);
+  analogWrite(PWM_MOTOR_RIGHT, 80);
+  delay(2000);
 
-    Serial.print("Distance = ");
-    Serial.print(distance);
-    Serial.println(" cm");
+  digitalWrite(DIR_MOTOR_LEFT, HIGH);
+  digitalWrite(DIR_MOTOR_RIGHT, LOW);
+  analogWrite(PWM_MOTOR_LEFT, 80);
+  delay(2000);
+  
+  // digitalWrite(DIR_MOTOR_RIGHT, HIGH);
+  // digitalWrite(DIR_MOTOR_LEFT, LOW);
+  // analogWrite(PWM_MOTOR_RIGHT, 127);
+  // delay(1000);
 
-    if (distance <= threshold) {
-      thresholdTriggered = true;
-    } else {
-      thresholdTriggered = false;
-    }
+  // digitalWrite(DIR_MOTOR_RIGHT, LOW);
+  // digitalWrite(DIR_MOTOR_LEFT, LOW);
+
+  // for (int i=0; i<5; i++) {
+  //   digitalWrite(ONBOARD_LED, LOW); // Turn off the on-board LED to show end of one loop
+  //   delay(100);
+  //   digitalWrite(ONBOARD_LED, HIGH); // Turn on the on-board LED to show end of one loop
+  //   delay(100);
+  // }
+  
+
+  // drive(MOTOR_RIGHT, REVERSE, 128);
+  // delay(1000);
+  // drive(MOTOR_LEFT, FORWARD, 0);
+  // delay(1000);
 
 
-    /*
-    30 -> 127
-    0 -> 64
-    */
-    // Act on threshold
-    if (thresholdTriggered) {
-      digitalWrite(LED_BUILTIN, HIGH); // LED ON when distance <= 30 cm
-      Serial.println("⚠️ Threshold reached!");
-      moveForward(64 + (2*distance));
-    } else {
-      digitalWrite(LED_BUILTIN, LOW); // LED OFF otherwise
-      stopDrive(MOTOR_RIGHT);
-      stopDrive(MOTOR_LEFT);
-    }
+  // // Clear the trig pin
+  // delayMicroseconds(2);
+  // digitalWrite(TRIG_PIN, LOW);
+  // delayMicroseconds(2);
 
-    measurementDone = false; // reset flag
-  } else {
-    Serial.println("Waiting for measurement to complete...");
-  }
+  // // Send a 10 µs HIGH pulse
+  // digitalWrite(TRIG_PIN, HIGH);
+  // delayMicroseconds(10);
+  // digitalWrite(TRIG_PIN, LOW);
+
+  // delay(100); // wait before next measurement
+
+  // if (measurementDone) {
+  //   unsigned long duration = endTime - startTime;
+  //   int distance = duration * 0.034 / 2;  // convert to cm
+
+  //   Serial.print("Distance = ");
+  //   Serial.print(distance);
+  //   Serial.println(" cm");
+
+  //   if (distance <= threshold) {
+  //     thresholdTriggered = true;
+  //   } else {
+  //     thresholdTriggered = false;
+  //   }
+
+
+  //   /*
+  //   30 -> 127
+  //   0 -> 64
+  //   */
+  //   // Act on threshold
+  //   if (thresholdTriggered) {
+  //     digitalWrite(LED_BUILTIN, HIGH); // LED ON when distance <= 30 cm
+  //     Serial.println("⚠️ Threshold reached!");
+  //     moveForward(64 + (2*distance));
+  //   } else {
+  //     digitalWrite(LED_BUILTIN, LOW); // LED OFF otherwise
+  //     // stopDrive(MOTOR_RIGHT);
+  //     // stopDrive(MOTOR_LEFT);
+  //     moveBackward(64); // rotate in place when no obstacle is near
+  //   }
+
+  //   measurementDone = false; // reset flag
+  // } else {
+  //   Serial.println("Waiting for measurement to complete...");
+  // }
 }
 
 
