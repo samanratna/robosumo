@@ -18,6 +18,7 @@
   The loop() demonstrates use of the motor driving functions.
 */
 #include <Arduino.h>
+#include "ir_sensor.h" // Include the IR sensor code
 
 // Clockwise and counter-clockwise definitions.
 // Depending on how you wired your motors, you may need to swap.
@@ -53,25 +54,57 @@ void stop(void);
 
 void setup()
 {
+  Serial.begin(9600);
   setupArdumoto(); // Set all pins as outputs
+  ir_setup();
 }
 
 void loop()
 {
-  forward(255); // Drive forward at max speed
-  delay(1000); // for 1 second
 
-  backward(255); // Drive backward at max speed
-  delay(1000); // for 1 second
+  int ir_reading = ir_test();
 
-  left(255); // Turn left at max speed
-  delay(1000); // for 1 second
+  if (ir_reading == 1) { // If obstacle detected in front
+    Serial.println("Obstacle in front! Backing up...");
+    backward(150); // Back up
+    delay(100); // for half a second
+    stop();
+    delay(100); // Pause
+    right(255); // Turn right
+    delay(100); // for a bit
+    stop();
+    delay(100); // Pause
+  } 
+  else if (ir_reading == 2) { // If obstacle detected at back
+    Serial.println("Obstacle at back! Moving forward...");
+    forward(150); // Move forward
+    delay(100); // for half a second
+    stop();
+    delay(100); // Pause
+    left(255); // Turn left
+    delay(100); // for a bit
+    stop();
+    delay(100); // Pause
+  } 
+  else { // No obstacle detected, move forward
+    Serial.println("Path clear! Moving right...");
+    right(100);
+  }
 
-  right(255); // Turn right at max speed
-  delay(1000); // for 1 second
+  // forward(255); // Drive forward at max speed
+  // delay(300); // for 1 second
 
-  stop(); // Stop motors
-  delay(1000); // for 1 second
+  // backward(255); // Drive backward at max speed
+  // delay(300); // for 1 second
+
+  // left(255); // Turn left at max speed
+  // delay(300); // for 1 second
+
+  // right(255); // Turn right at max speed
+  // delay(300); // for 1 second
+
+  // stop(); // Stop motors
+  delay(300); // for 1 second
 }
 
 void forward(byte spd)
