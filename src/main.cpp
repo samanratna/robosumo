@@ -64,37 +64,70 @@ void loop()
 
   int ir_reading = ir_test();
 
-  if (ir_reading == 1) { // If obstacle detected in front
-    Serial.println("Obstacle in front! Backing up...");
-    backward(100); // Back up
-    delay(500); // for half a second
-    stop();
-    delay(100); // Pause
-    right(100); // Turn right
-    delay(100); // for a bit
-    stop();
-    delay(100); // Pause
+  if (ir_reading == 0) {
+    Serial.println("No obstacle detected.");
+    right(255);
+    delay(100);
+    forward(100);
+    delay(100);
   } 
-  else if (ir_reading == 2) { // If obstacle detected at back
-    Serial.println("Obstacle at back! Moving forward...");
-    forward(100); // Move forward
-    delay(500); // for half a second
-    stop();
-    delay(100); // Pause
-    left(100); // Turn left
-    delay(100); // for a bit
-    stop();
-    delay(100); // Pause
+  else if (ir_reading == 1) {
+    Serial.println("Obstacle detected in back!");
+    forward(100);
   } 
-  else { // No obstacle detected, move forward
-    Serial.println("Path clear! Moving right...");
-    forward(150); // Move forward
-    delay(100); // for half a second
-    stop();
-    delay(100); // Pause
-    left(255); // Turn left
-    delay(100); // for a bit
+  else if (ir_reading == 2) {
+    Serial.println("Obstacle detected at front!");
+    backward(100);
+  } 
+  else if (ir_reading == 3) {
+    Serial.println("Obstacle detected on the left!");
+    right(255);
+    delay(100);
+    forward(100);
+    delay(100);
   }
+  else if (ir_reading == 4) {
+    Serial.println("Obstacle detected on the right!");
+    backward(100);
+  } else {
+    Serial.println("Unknown IR reading.");
+    right(255);
+    delay(100);
+    forward(100);
+    delay(100);
+  }
+
+  // if (ir_reading == 1) { // If obstacle detected in front
+  //   Serial.println("Obstacle in front! Backing up...");
+  //   backward(100); // Back up
+  //   delay(500); // for half a second
+  //   stop();
+  //   delay(100); // Pause
+  //   right(100); // Turn right
+  //   delay(100); // for a bit
+  //   stop();
+  //   delay(100); // Pause
+  // } 
+  // else if (ir_reading == 2) { // If obstacle detected at back
+  //   Serial.println("Obstacle at back! Moving forward...");
+  //   forward(100); // Move forward
+  //   delay(500); // for half a second
+  //   stop();
+  //   delay(100); // Pause
+  //   left(100); // Turn left
+  //   delay(100); // for a bit
+  //   stop();
+  //   delay(100); // Pause
+  // } 
+  // else { // No obstacle detected, move forward
+  //   Serial.println("Path clear! Moving right...");
+  //   forward(150); // Move forward
+  //   delay(100); // for half a second
+  //   stop();
+  //   delay(100); // Pause
+  //   left(255); // Turn left
+  //   delay(100); // for a bit
+  // }
 
   // forward(255); // Drive forward at max speed
   // delay(300); // for 1 second
@@ -109,7 +142,7 @@ void loop()
   // delay(300); // for 1 second
 
   // stop(); // Stop motors
-  delay(300); // for 1 second
+  // delay(300); // for 1 second
 }
 
 void forward(byte spd)
