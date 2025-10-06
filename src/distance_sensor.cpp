@@ -39,7 +39,7 @@ int ultrasonic_checkObstacle() {
   Serial.print(" | Right: "); Serial.println(d_right);
 
   if (d_front > 0 && d_front < OBSTACLE_THRESHOLD_CM) return OBSTACLE_FRONT;
-  if (d_back  > 0 && d_back  < OBSTACLE_THRESHOLD_CM) return OBSTACLE_BACK;
+  // if (d_back  > 0 && d_back  < OBSTACLE_THRESHOLD_CM) return OBSTACLE_BACK;
   if (d_left  > 0 && d_left  < OBSTACLE_THRESHOLD_CM) return OBSTACLE_LEFT;
   if (d_right > 0 && d_right < OBSTACLE_THRESHOLD_CM) return OBSTACLE_RIGHT;
 

@@ -49,48 +49,28 @@ void ir_setup() {
 //   }
 //   // delay(100); // slow down output for readability
 // }
-
 int ir_test() {
-  int ir_front_left  = digitalRead(IR1_PIN); // Sensor 1
-  int ir_back_left   = digitalRead(IR2_PIN); // Sensor 2
-  int ir_back_right  = digitalRead(IR3_PIN); // Sensor 3
+  int ir_front_left = digitalRead(IR1_PIN); // Sensor 1
+  int ir_back_left  = digitalRead(IR2_PIN); // Sensor 2
+  // int ir_back_right = digitalRead(IR3_PIN); // ignored
   // int ir_front_right = digitalRead(IR4_PIN); // ignored
 
   Serial.print("FL: "); Serial.print(ir_front_left);
-  Serial.print(" | BL: "); Serial.print(ir_back_left);
-  Serial.print(" | BR: "); Serial.println(ir_back_right);
+  Serial.print(" | BL: "); Serial.println(ir_back_left);
 
-  // --- Logic without front-right sensor ---
+  // --- Logic using only FL and BL ---
 
-  // Case 1: Default (1 1 1)
-  if (ir_front_left && ir_back_left && ir_back_right) {
-    return DEFAULT;
+  if (ir_front_left && ir_back_left) {
+    return DEFAULT;        // Both sensors see obstacle: default
   }
-
-  // Case 2: Forward (1 1 0) or (1 0 1) or (1 0 0)
-  else if ((ir_front_left && ir_back_left && !ir_back_right) ||
-           (ir_front_left && !ir_back_left && ir_back_right) ||
-           (ir_front_left && !ir_back_left && !ir_back_right)) {
-    return IR_BACKWARD;
+  else if (ir_front_left && !ir_back_left) {
+    return IR_FORWARD;    // Front left sees obstacle, back left clear
   }
-
-  // Case 3: Backward (0 1 1)
-  else if (!ir_front_left && ir_back_left && ir_back_right) {
-    return IR_FORWARD;
+  else if (!ir_front_left && ir_back_left) {
+    return IR_BACKWARD;     // Front left clear, back left sees obstacle
   }
-
-  // Case 4: Right + Forward (0 0 1)
-  else if (!ir_front_left && !ir_back_left && ir_back_right) {
-    return IR_LEFT;
-  }
-
-  // Case 3: Backward (0 1 0)
-  else if( !ir_front_left && ir_back_left && !ir_back_right) {
-    return IR_RIGHT;
-  }
-
-  // Default fallback
-  else {
-    return DEFAULT;
+  else { 
+    return DEFAULT;        // Both clear
   }
 }
+

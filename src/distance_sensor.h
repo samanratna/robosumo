@@ -4,17 +4,17 @@
 #include <Arduino.h>
 
 // === Ultrasonic sensor pin definitions ===
-#define US1_TRIG 6   // FRONT
-#define US1_ECHO 2
+#define US2_TRIG 6   // FRONT
+#define US2_ECHO 2
 
-#define US2_TRIG 5   // BACK
-#define US2_ECHO 3
+#define US1_TRIG 5   // BACK
+#define US1_ECHO 3
 
-#define US3_TRIG 4   // LEFT
-#define US3_ECHO 12
+#define US4_TRIG 4   // LEFT
+#define US4_ECHO 12
 
-#define US4_TRIG 11  // RIGHT
-#define US4_ECHO 13
+#define US3_TRIG 11  // RIGHT
+#define US3_ECHO 13
 
 // === Constants ===
 #define OBSTACLE_THRESHOLD_CM 30
