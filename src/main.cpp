@@ -66,29 +66,34 @@ void loop()
 
   if (ir_reading == 1) { // If obstacle detected in front
     Serial.println("Obstacle in front! Backing up...");
-    backward(150); // Back up
-    delay(100); // for half a second
+    backward(100); // Back up
+    delay(500); // for half a second
     stop();
     delay(100); // Pause
-    right(255); // Turn right
+    right(100); // Turn right
     delay(100); // for a bit
     stop();
     delay(100); // Pause
   } 
   else if (ir_reading == 2) { // If obstacle detected at back
     Serial.println("Obstacle at back! Moving forward...");
-    forward(150); // Move forward
-    delay(100); // for half a second
+    forward(100); // Move forward
+    delay(500); // for half a second
     stop();
     delay(100); // Pause
-    left(255); // Turn left
+    left(100); // Turn left
     delay(100); // for a bit
     stop();
     delay(100); // Pause
   } 
   else { // No obstacle detected, move forward
     Serial.println("Path clear! Moving right...");
-    right(100);
+    forward(150); // Move forward
+    delay(100); // for half a second
+    stop();
+    delay(100); // Pause
+    left(255); // Turn left
+    delay(100); // for a bit
   }
 
   // forward(255); // Drive forward at max speed
