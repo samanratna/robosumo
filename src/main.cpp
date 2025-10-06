@@ -19,6 +19,7 @@
 */
 #include <Arduino.h>
 #include "ir_sensor.h" // Include the IR sensor code
+#include "distance_sensor.h"
 
 // Clockwise and counter-clockwise definitions.
 // Depending on how you wired your motors, you may need to swap.
@@ -59,91 +60,190 @@ void setup()
   ir_setup();
 }
 
-void loop()
-{
-
+void loop() {
+  int distance_reading = ultrasonic_checkObstacle();
   int ir_reading = ir_test();
 
-  if (ir_reading == 0) {
-    Serial.println("No obstacle detected.");
-    right(255);
-    delay(100);
-    forward(100);
-    delay(100);
-  } 
-  else if (ir_reading == 1) {
-    Serial.println("Obstacle detected in back!");
-    forward(100);
-  } 
-  else if (ir_reading == 2) {
-    Serial.println("Obstacle detected at front!");
-    backward(100);
-  } 
-  else if (ir_reading == 3) {
-    Serial.println("Obstacle detected on the left!");
-    right(255);
-    delay(100);
-    forward(100);
-    delay(100);
+  // === Step 1: If ultrasonic detects obstacle ===
+  if (distance_reading != NONE) {
+    switch (distance_reading) {
+      case OBSTACLE_FRONT:
+        Serial.println("Ultrasonic: Target in FRONT → Moving forward...");
+        while (true) {
+          forward(200);
+          delay(100);
+
+          // Continuously check IR sensors while approaching
+          int ir_check = ir_test();
+          if (ir_check == IR_FORWARD) {
+            Serial.println("IR: Close obstacle detected at FRONT → Stop!");
+            backward(100);
+            delay(100);
+            break;
+          }
+
+          delay(50);
+        }
+        break;
+
+      case OBSTACLE_BACK:
+        Serial.println("Ultrasonic: Target in BACK → Moving backward...");
+        while (true) {
+          backward(200);
+          delay(100);
+          int ir_check = ir_test();
+          if (ir_check == IR_BACKWARD) {
+            Serial.println("IR: Close obstacle detected at BACK → Stop!");
+            forward(100);
+            delay(100);
+            break;
+          }
+          delay(50);
+        }
+        break;
+
+      case OBSTACLE_LEFT:
+        Serial.println("Ultrasonic: Target on LEFT → Moving left...");
+        while (true) {
+          left(200);
+          delay(100);
+          int ir_check = ir_test();
+          if (ir_check == IR_LEFT) {
+            Serial.println("IR: Close obstacle detected on LEFT → Stop!");
+            right(255);
+            delay(100);
+            forward(100);
+            delay(100);
+            break;
+          }
+          delay(50);
+        }
+        break;
+
+      case OBSTACLE_RIGHT:
+        Serial.println("Ultrasonic: Target on RIGHT → Moving right...");
+        while (true) {
+          right(200);
+          delay(100);
+          int ir_check = ir_test();
+          if (ir_check == IR_RIGHT) {
+            Serial.println("IR: Close obstacle detected on RIGHT → Stop!");
+            backward(100);
+            break;
+          }
+          delay(50);
+        }
+        break;
+    }
   }
-  else if (ir_reading == 4) {
-    Serial.println("Obstacle detected on the right!");
-    backward(100);
-  } else {
-    Serial.println("Unknown IR reading.");
-    right(255);
-    delay(100);
-    forward(100);
-    delay(100);
+
+  // === Step 2: If no ultrasonic detection, scan with IR ===
+  else if (ir_reading != DEFAULT) {
+
+    if (ir_reading == IR_BACKWARD) {
+      Serial.println("Obstacle detected in back!");
+      forward(100);
+    } 
+    else if (ir_reading == IR_FORWARD) {
+      Serial.println("Obstacle detected at front!");
+      backward(100);
+    } 
+    else if (ir_reading == IR_LEFT) {
+      Serial.println("Obstacle detected on the left!");
+      right(255);
+      delay(100);
+      forward(100);
+      delay(100);
+    }
+    else if (ir_reading == IR_RIGHT) {
+      Serial.println("Obstacle detected on the right!");
+      backward(100);
+    } else {
+      Serial.println("Unknown IR reading.");
+      right(255);
+      delay(100);
+      forward(100);
+      delay(100);
+    }
+
+
+
+
+    // switch (ir_reading) {
+    //   case IR_FORWARD:
+    //     Serial.println("IR: Obstacle at FRONT → Moving forward!");
+    //     backward(200);
+    //     break;
+
+    //   case IR_BACKWARD:
+    //     Serial.println("IR: Obstacle at BACK → Moving backward!");
+    //     forward(200);
+    //     break;
+
+    //   case IR_LEFT:
+    //     Serial.println("IR: Obstacle on LEFT → Turning left!");
+    //     right(200);
+    //     break;
+
+    //   case IR_RIGHT:
+    //     Serial.println("IR: Obstacle on RIGHT → Turning right!");
+    //     left(200);
+    //     break;
+    // }
   }
 
-  // if (ir_reading == 1) { // If obstacle detected in front
-  //   Serial.println("Obstacle in front! Backing up...");
-  //   backward(100); // Back up
-  //   delay(500); // for half a second
-  //   stop();
-  //   delay(100); // Pause
-  //   right(100); // Turn right
-  //   delay(100); // for a bit
-  //   stop();
-  //   delay(100); // Pause
-  // } 
-  // else if (ir_reading == 2) { // If obstacle detected at back
-  //   Serial.println("Obstacle at back! Moving forward...");
-  //   forward(100); // Move forward
-  //   delay(500); // for half a second
-  //   stop();
-  //   delay(100); // Pause
-  //   left(100); // Turn left
-  //   delay(100); // for a bit
-  //   stop();
-  //   delay(100); // Pause
-  // } 
-  // else { // No obstacle detected, move forward
-  //   Serial.println("Path clear! Moving right...");
-  //   forward(150); // Move forward
-  //   delay(100); // for half a second
-  //   stop();
-  //   delay(100); // Pause
-  //   left(255); // Turn left
-  //   delay(100); // for a bit
-  // }
-
-  // forward(255); // Drive forward at max speed
-  // delay(300); // for 1 second
-
-  // backward(255); // Drive backward at max speed
-  // delay(300); // for 1 second
-
-  // left(255); // Turn left at max speed
-  // delay(300); // for 1 second
-
-  // right(255); // Turn right at max speed
-  // delay(300); // for 1 second
-
-  // stop(); // Stop motors
-  // delay(300); // for 1 second
+  // === Step 3: No detections at all → keep scanning ===
+  else {
+    Serial.println("No obstacle detected — rotating to find one...");
+    right(150);
+  }
+  delay(100);
 }
+
+
+// void loop()
+// {
+
+//   int ir_reading = ir_test();
+
+//   if (ir_reading == DEFAULT) {
+//     Serial.println("No obstacle detected.");
+//     right(255);
+//     delay(100);
+//     forward(100);
+//     delay(100);
+//   } 
+//   else if (ir_reading == IR_BACKWARD) {
+//     Serial.println("Obstacle detected in back!");
+//     forward(100);
+//   } 
+//   else if (ir_reading == IR_FORWARD) {
+//     Serial.println("Obstacle detected at front!");
+//     backward(100);
+//   } 
+//   else if (ir_reading == IR_LEFT) {
+//     Serial.println("Obstacle detected on the left!");
+//     right(255);
+//     delay(100);
+//     forward(100);
+//     delay(100);
+//   }
+//   else if (ir_reading == IR_RIGHT) {
+//     Serial.println("Obstacle detected on the right!");
+//     backward(100);
+//   } else {
+//     Serial.println("Unknown IR reading.");
+//     right(255);
+//     delay(100);
+//     forward(100);
+//     delay(100);
+//   }
+
+
+//   int distance_reading = ultrasonic_checkObstacle();
+
+
+// }
 
 void forward(byte spd)
 {

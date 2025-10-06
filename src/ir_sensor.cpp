@@ -1,11 +1,11 @@
 #include "ir_sensor.h"
 
 // Movement codes
-#define DEFAULT 0
-#define FORWARD 1
-#define BACKWARD 2
-#define RIGHT_FORWARD 3
-#define LEFT_FORWARD 4
+// #define DEFAULT 0
+// #define IR_FORWARD 1
+// #define IR_BACKWARD 2
+// #define IR_RIGHT_FORWARD 3
+// #define IR_LEFT_FORWARD 4
 
 void ir_setup() {
   // If sensors are digital type, set them as INPUT
@@ -71,22 +71,22 @@ int ir_test() {
   else if ((ir_front_left && ir_back_left && !ir_back_right) ||
            (ir_front_left && !ir_back_left && ir_back_right) ||
            (ir_front_left && !ir_back_left && !ir_back_right)) {
-    return FORWARD;
+    return IR_BACKWARD;
   }
 
   // Case 3: Backward (0 1 1)
   else if (!ir_front_left && ir_back_left && ir_back_right) {
-    return BACKWARD;
+    return IR_FORWARD;
   }
 
   // Case 4: Right + Forward (0 0 1)
   else if (!ir_front_left && !ir_back_left && ir_back_right) {
-    return RIGHT_FORWARD;
+    return IR_LEFT;
   }
 
   // Case 3: Backward (0 1 0)
   else if( !ir_front_left && ir_back_left && !ir_back_right) {
-    return LEFT_FORWARD;
+    return IR_RIGHT;
   }
 
   // Default fallback
