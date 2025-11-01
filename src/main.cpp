@@ -48,7 +48,7 @@ int delay_after_movement = 200; // Time (in milliseconds) to drive motors in loo
 int delay_after_stop = 200; // Time (in milliseconds) to drive motors in loop()
 
 // speed variations
-int speedSet = 100; // Speed setting (0-255) for motors in loop()
+int speedSet = 130; // Speed setting (0-255) for motors in loop()
 
 // ir global variables
 byte ir_bit_pattern;
@@ -81,7 +81,7 @@ void loop()
   // cases for front movement
   if (ir_bit_pattern == 0b1100 || ir_bit_pattern == 0b1101 || ir_bit_pattern == 0b1110) {
     // Opponent detected in front
-    forward(speedSet + 50);
+    forward(speedSet + 40);
     delay(delay_after_movement);
     stop();
     delay(delay_after_stop);
@@ -90,8 +90,8 @@ void loop()
   // cases for back movement
   else if (ir_bit_pattern == 0b0011 || ir_bit_pattern == 0b0111 || ir_bit_pattern == 0b1011) {
     // Opponent detected in back
-    backward(speedSet + 50);
-    delay(delay_after_movement);
+    backward(speedSet);
+    delay(delay_after_movement+30);
     stop();
     delay(delay_after_stop);
   }
@@ -139,9 +139,9 @@ void loop()
   // case to find the opponent if no IR signal is detected
   else if (ir_bit_pattern == 0b1111) {
     // No opponent detected
-    forward(speedSet);
-    delay(delay_after_movement);
     right(speedSet);
+    delay(delay_after_movement);
+    forward(speedSet);
     delay(delay_after_movement);
     // forward(speedSet);
     // delay(delay_after_movement - 50);
