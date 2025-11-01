@@ -18,10 +18,10 @@
 #define IR_RIGHT 4
 
 // Pin definitions
-#define IR1_PIN A0
-#define IR2_PIN A1
-#define IR3_PIN A2
-#define IR4_PIN A3
+#define IR_PIN_FRONT_RIGHT A1
+#define IR_PIN_FRONT_LEFT A0
+#define IR_PIN_BACK_RIGHT A2
+#define IR_PIN_BACK_LEFT A3
 
 // void initIRSensors();
 // int readIRSensor(int index);

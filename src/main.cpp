@@ -19,7 +19,7 @@
 */
 #include <Arduino.h>
 #include "ir_sensor.h" // Include the IR sensor code
-#include "distance_sensor.h"
+// #include "distance_sensor.h"
 
 // Clockwise and counter-clockwise definitions.
 // Depending on how you wired your motors, you may need to swap.
@@ -43,6 +43,9 @@
 #define DIRB 7 // Direction control for motor B
 #define PWMB 10 // PWM control (speed) for motor B
 
+int delayTime = 200; // Time (in milliseconds) to drive motors in loop()
+int speedSet = 100; // Speed setting (0-255) for motors in loop()
+
 void driveArdumoto(byte motor, byte dir, byte spd);
 void setupArdumoto();
 void stopArdumoto(byte motor);
@@ -57,20 +60,35 @@ void setup()
 {
   Serial.begin(9600);
   setupArdumoto(); // Set all pins as outputs
-  // ir_setup();
-  ultrasonic_setup();
+  ir_setup();
+  // ultrasonic_setup();
 }
 
 void loop()
 {
-  int distance_reading = ultrasonic_checkObstacle();
+  // ir_test();
+  // delay(500);
 
-  if (distance_reading == OBSTACLE_FRONT) {
-      forward(100);
-    }
-  else {
-    right(50);
-  }
+  forward(speedSet);
+  delay(delayTime);
+  stop();
+  delay(delayTime);
+
+  backward(speedSet);
+  delay(delayTime);
+  stop();
+  delay(delayTime);
+
+  left(speedSet);
+  delay(delayTime);
+  stop();
+
+  delay(delayTime);
+  right(speedSet);
+  delay(delayTime);
+  stop();
+
+  delay(1000);
 }
 
 void forward(byte spd)
