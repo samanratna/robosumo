@@ -1,184 +1,159 @@
+    /* Ardumoto Example Sketch
+  by: Jim Lindblom
+  date: November 8, 2013
+  license: Public domain. Please use, reuse, and modify this 
+  sketch!
+
+  Adapted to v20 hardware by: Marshall Taylor
+  date: March 31, 2017
+  
+  Three useful functions are defined:
+    setupArdumoto() -- Setup the Ardumoto Shield pins
+    driveArdumoto([motor], [direction], [speed]) -- Drive [motor] 
+      (0 for A, 1 for B) in [direction] (0 or 1) at a [speed]
+      between 0 and 255. It will spin until told to stop.
+    stopArdumoto([motor]) -- Stop driving [motor] (0 or 1).
+
+  setupArdumoto() is called in the setup().
+  The loop() demonstrates use of the motor driving functions.
+*/
 #include <Arduino.h>
+#include "ir_sensor.h" // Include the IR sensor code
+// #include "distance_sensor.h"
 
-#define TRIG_PIN 9
-#define ECHO_PIN 2
-
-long duration;
-float distance_cm;
-
-const int threshold = 30; // cm
-bool thresholdTriggered = false;
-
-// Clockwise and counter-clockwise definitions
+// Clockwise and counter-clockwise definitions.
+// Depending on how you wired your motors, you may need to swap.
 #define FORWARD  0
 #define REVERSE 1
 
-// Motor definitions
-#define MOTOR_RIGHT 1
-#define MOTOR_LEFT 0
+// Motor definitions to make life easier:
+#define MOTOR_A 0
+#define MOTOR_B 1
 
 // Pin Assignments //
-#define DIR_MOTOR_RIGHT 4  // Direction control for motor RIGHT
-#define PWM_MOTOR_RIGHT 11  // PWM control (speed) for motor RIGHT
+//Default pins:
+// #define DIRA 2 // Direction control for motor A
+// #define PWMA 3  // PWM control (speed) for motor A
+// #define DIRB 4 // Direction control for motor B
+// #define PWMB 11 // PWM control (speed) for motor B
 
-#define DIR_MOTOR_LEFT 10  // Direction control for motor LEFT
-#define PWM_MOTOR_LEFT 3 // PWM control (speed) for motor LEFT
+////Alternate pins:
+#define DIRA 8 // Direction control for motor A
+#define PWMA 9 // PWM control (speed) for motor A
+#define DIRB 7 // Direction control for motor B
+#define PWMB 10 // PWM control (speed) for motor B
 
-#define ONBOARD_LED 13 // On-board LED
+int delayTime = 200; // Time (in milliseconds) to drive motors in loop()
+int speedSet = 100; // Speed setting (0-255) for motors in loop()
 
+void driveArdumoto(byte motor, byte dir, byte spd);
+void setupArdumoto();
+void stopArdumoto(byte motor);
 
-// Function Prototypes
-void motorsInit(void);
-void ultrasonicSensorInit(void);
-void drive(byte motor, byte dir, byte spd);
-void stopDrive(byte motor);
-void rotateRight(byte spd);
-void rotateLeft(byte spd);
-void moveForward(byte spd);
-void moveBackward(byte spd);
-float getDistance(void);
+void forward(byte spd);
+void backward(byte spd);
+void left(byte spd);
+void right(byte spd);
+void stop(void);
 
-
-/// @brief Arduino setup function
 void setup()
 {
-  motorsInit();
-  ultrasonicSensorInit();
-
-  pinMode(ONBOARD_LED, OUTPUT);
-  digitalWrite(ONBOARD_LED, HIGH); // Show peripherals initialized
-
-  Serial.begin(9600); // Start serial communication
-  Serial.println("Starting main codebase here...");
+  Serial.begin(9600);
+  setupArdumoto(); // Set all pins as outputs
+  ir_setup();
+  // ultrasonic_setup();
 }
 
-
-/// @brief Arduino main loop function
 void loop()
 {
-  // moveBackward(64); // Move backward at speed 64
-  // moveForward(64);  // Move forward at speed 64
-  
-  // Get distance by polling
-  float distance = getDistance();
+  // ir_test();
+  // delay(500);
 
-  Serial.print("Distance = ");
-  Serial.print(distance);
-  Serial.println(" cm");
+  forward(speedSet);
+  delay(delayTime);
+  stop();
+  delay(delayTime);
 
-  // Threshold check
-  if (distance <= threshold) {
-    thresholdTriggered = true;
-  } else {
-    thresholdTriggered = false;
-  }
+  backward(speedSet);
+  delay(delayTime);
+  stop();
+  delay(delayTime);
 
-  // Act on threshold
-  if (thresholdTriggered) {
-    digitalWrite(LED_BUILTIN, HIGH); // LED ON when distance <= 30 cm
-    Serial.println("⚠️ Threshold reached!");
-    moveForward(64); // scale motor speed
-  } else {
-    digitalWrite(LED_BUILTIN, LOW); // LED OFF otherwise
-    moveBackward(64);
-  }
+  left(speedSet);
+  delay(delayTime);
+  stop();
 
-  delay(100); // Wait before next measurement
+  delay(delayTime);
+  right(speedSet);
+  delay(delayTime);
+  stop();
+
+  delay(1000);
 }
 
-
-// drive drives 'motor' in 'dir' direction at 'spd' speed
-void drive(byte motor, byte dir, byte spd)
+void forward(byte spd)
 {
-  if (motor == MOTOR_RIGHT) {
-    digitalWrite(DIR_MOTOR_RIGHT, dir);
-    analogWrite(PWM_MOTOR_RIGHT, spd);
+  driveArdumoto(MOTOR_A, FORWARD, spd);  // Motor A at max speed.
+  driveArdumoto(MOTOR_B, FORWARD, spd);  // Motor B at max speed.
+}
+
+void backward(byte spd)
+{
+  driveArdumoto(MOTOR_A, REVERSE, spd);  // Motor A at max speed.
+  driveArdumoto(MOTOR_B, REVERSE, spd);  // Motor B at max speed.
+}
+
+void left(byte spd)
+{
+  driveArdumoto(MOTOR_A, REVERSE, spd);  // Motor A at max speed.
+  driveArdumoto(MOTOR_B, FORWARD, spd);  // Motor B at max speed.
+}
+
+void right(byte spd)
+{
+  driveArdumoto(MOTOR_A, FORWARD, spd);  // Motor A at max speed.
+  driveArdumoto(MOTOR_B, REVERSE, spd);  // Motor B at max speed.
+}
+
+void stop()
+{
+  stopArdumoto(MOTOR_A);  // STOP motor A 
+  stopArdumoto(MOTOR_B);  // STOP motor B 
+}
+
+// driveArdumoto drives 'motor' in 'dir' direction at 'spd' speed
+void driveArdumoto(byte motor, byte dir, byte spd)
+{
+  if (motor == MOTOR_A)
+  {
+    digitalWrite(DIRA, dir);
+    analogWrite(PWMA, spd);
   }
-  else if (motor == MOTOR_LEFT) {
-    digitalWrite(DIR_MOTOR_LEFT, dir);
-    analogWrite(PWM_MOTOR_LEFT, spd);
+  else if (motor == MOTOR_B)
+  {
+    digitalWrite(DIRB, dir);
+    analogWrite(PWMB, spd);
   }  
 }
 
-
-//  motor stop
-void stopDrive(byte motor)
+// stopArdumoto makes a motor stop
+void stopArdumoto(byte motor)
 {
-  drive(motor, 0, 0);
+  driveArdumoto(motor, 0, 0);
 }
 
-
-// rotate right
-void rotateRight(byte spd)
-{
-  drive(MOTOR_RIGHT, REVERSE, spd);
-  drive(MOTOR_LEFT, FORWARD, spd);
-}
-
-
-// rotate left
-void rotateLeft(byte spd)
-{
-  drive(MOTOR_RIGHT, FORWARD, spd);
-  drive(MOTOR_LEFT, REVERSE, spd);
-}
-
-
-// forward
-void moveForward(byte spd)
-{
-  drive(MOTOR_RIGHT, FORWARD, spd);
-  drive(MOTOR_LEFT, FORWARD, spd);
-}
-
-
-// backward
-void moveBackward(byte spd)
-{
-  drive(MOTOR_RIGHT, REVERSE, spd);
-  drive(MOTOR_LEFT, REVERSE, spd);
-}
-
-
-// motorsInit initialize all pins
-void motorsInit()
+// setupArdumoto initialize all pins
+void setupArdumoto()
 {
   // All pins should be setup as outputs:
-  pinMode(PWM_MOTOR_RIGHT, OUTPUT);
-  pinMode(DIR_MOTOR_RIGHT, OUTPUT);
-  
-  pinMode(PWM_MOTOR_LEFT, OUTPUT);
-  pinMode(DIR_MOTOR_LEFT, OUTPUT);
+  pinMode(PWMA, OUTPUT);
+  pinMode(PWMB, OUTPUT);
+  pinMode(DIRA, OUTPUT);
+  pinMode(DIRB, OUTPUT);
 
-  stopDrive(MOTOR_RIGHT);  // STOP right motor
-  stopDrive(MOTOR_LEFT);   // STOP left motor 
-}
-
-
-// initialize ultrasonic sensor
-void ultrasonicSensorInit(void)
-{
-  pinMode(TRIG_PIN, OUTPUT);
-  pinMode(ECHO_PIN, INPUT);
-}
-
-
-// get distance from ultrasonic sensor (polling mode)
-float getDistance(void)
-{
-  // Clear the trig pin
-  digitalWrite(TRIG_PIN, LOW);
-  delayMicroseconds(2);
-
-  // Send a 10 µs HIGH pulse
-  digitalWrite(TRIG_PIN, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(TRIG_PIN, LOW);
-
-  // Read echo pin duration using polling
-  duration = pulseIn(ECHO_PIN, HIGH, 30000UL); // timeout = 30 ms (~5 m range)
-
-  // Convert to distance (cm)
-  float calculated_distance = (duration * 0.0343) / 2;
-  return calculated_distance;
+  // Initialize all pins as low:
+  digitalWrite(PWMA, LOW);
+  digitalWrite(PWMB, LOW);
+  digitalWrite(DIRA, LOW);
+  digitalWrite(DIRB, LOW);
 }
