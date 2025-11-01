@@ -44,8 +44,8 @@
 #define PWMB 10 // PWM control (speed) for motor B
 
 // delay variations
-int delay_after_movement = 200; // Time (in milliseconds) to drive motors in loop()
-int delay_after_stop = 200; // Time (in milliseconds) to drive motors in loop()
+int delay_after_movement = 200;       // Time (in milliseconds) to drive motors in loop()
+int delay_after_stop = 200;           // Time (in milliseconds) to drive motors in loop()
 
 // speed variations
 int speedSet = 130; // Speed setting (0-255) for motors in loop()
@@ -53,6 +53,21 @@ int speedSet = 130; // Speed setting (0-255) for motors in loop()
 // ir global variables
 byte ir_bit_pattern;
 
+// logic flags
+bool _find = 0;
+bool _forward = 0;
+bool _backward = 0;
+bool _left = 0;
+bool _right = 0;
+bool _stop = 0;
+bool _left_forward = 0;
+bool _right_forward = 0;
+
+// time tracking
+unsigned long start_time = 0;
+unsigned long current_time = 0;
+
+// Function prototypes
 void driveArdumoto(byte motor, byte dir, byte spd);
 void setupArdumoto();
 void stopArdumoto(byte motor);
@@ -64,92 +79,227 @@ void left(byte spd);
 void right(byte spd);
 void stop(void);
 
+// Arduino setup function
 void setup()
 {
   Serial.begin(9600);
-  setupArdumoto(); // Set all pins as outputs
+  setupArdumoto();    // Set all pins as outputs
   ir_setup();
   // ultrasonic_setup();
 }
 
 void loop()
 {
-  ir_test();
-  // delay(500);
   byte ir_bit_pattern = start_ir_reading();
 
-  // cases for front movement
-  if (ir_bit_pattern == 0b1100 || ir_bit_pattern == 0b1101 || ir_bit_pattern == 0b1110) {
-    // Opponent detected in front
-    forward(speedSet + 40);
-    delay(delay_after_movement);
-    stop();
-    delay(delay_after_stop);
+  if (ir_bit_pattern == 0b1100 || ir_bit_pattern == 0b1101 || ir_bit_pattern == 0b1110) {   // cases for forward movement
+    
+    if (!_forward) {
+
+      _forward = 1;
+      _backward = 0;
+      _left = 0;
+      _right = 0;
+      _stop = 0;
+      _left_forward = 0;
+      _right_forward = 0;
+
+      start_time = millis();
+    }
+
+  } else if (ir_bit_pattern == 0b0011 || ir_bit_pattern == 0b0111 || ir_bit_pattern == 0b1011) {  // cases for back movement
+
+    if (!_backward) {
+
+      _forward = 0;
+      _backward = 1;
+      _left = 0;
+      _right = 0;
+      _stop = 0;
+      _left_forward = 0;
+      _right_forward = 0;
+
+      start_time = millis();
+    }
+
+  } else if (ir_bit_pattern == 0b0101 || ir_bit_pattern == 0b0110 || ir_bit_pattern == 0b1001) {  // cases for right movement
+
+    if (!_right) {
+
+      _forward = 0;
+      _backward = 0;
+      _left = 0;
+      _right = 1;
+      _stop = 0;
+      _left_forward = 0;
+      _right_forward = 0;
+
+      start_time = millis();
+    }
+
+  } else if (ir_bit_pattern == 0 || ir_bit_pattern == 0b1010) {   // cases for left movement
+
+    if (!_left) {
+
+      _forward = 0;
+      _backward = 0;
+      _left = 1;
+      _right = 0;
+      _stop = 0;
+      _left_forward = 0;
+      _right_forward = 0;
+
+      start_time = millis();
+    }
+
+  } else if (ir_bit_pattern == 0b0010 || ir_bit_pattern == 0b1000) {  // cases for left + forward movement
+    if (!_left_forward) {
+
+      _forward = 0;
+      _backward = 0;
+      _left = 0;
+      _right = 0;
+      _stop = 0;
+      _left_forward = 1;
+      _right_forward = 0;
+
+      start_time = millis();
+    }
+
+  } else if (ir_bit_pattern == 0b0001 || ir_bit_pattern == 0b0100 || ir_bit_pattern == 0b1111) {   // cases for right + forward movement
+
+    if (!_right_forward) {
+
+      _forward = 0;
+      _backward = 0;
+      _left = 0;
+      _right = 0;
+      _stop = 0;
+      _left_forward = 0;
+      _right_forward = 1;
+
+      start_time = millis();
+    }
+  } 
+  // else if (ir_bit_pattern == 0b1111) {
+
+  //   if (!_find) {
+
+  //     _find = 1;
+  //     _forward = 0;
+  //     _backward = 0;
+  //     _left = 0;
+  //     _right = 0;
+  //     _stop = 0;
+  //     _left_forward = 0;
+  //     _right_forward = 0;
+
+  //     start_time = millis();
+  //   }
+  // }
+
+  if (_forward) {
+    current_time = millis();
+    if ((current_time - start_time) <= delay_after_movement) {
+      forward(speedSet);
+    } else {
+      _forward = 0;
+    }
   }
 
-  // cases for back movement
-  else if (ir_bit_pattern == 0b0011 || ir_bit_pattern == 0b0111 || ir_bit_pattern == 0b1011) {
-    // Opponent detected in back
-    backward(speedSet);
-    delay(delay_after_movement+30);
-    stop();
-    delay(delay_after_stop);
+  if (_backward) {
+    current_time = millis();
+    if ((current_time - start_time) <= delay_after_movement) {
+      backward(speedSet);
+    } else {
+      _backward = 0;
+    }
   }
 
-  // cases for right movement
-  else if (ir_bit_pattern == 0b0101 || ir_bit_pattern == 0b0110 || ir_bit_pattern == 0b1001) {
-    // Opponent detected on right
-    right(speedSet);
-    delay(delay_after_movement);
-    stop();
-    delay(delay_after_stop);
+  if (_left) {
+    current_time = millis();
+    if ((current_time - start_time) <= delay_after_movement) {
+      left(speedSet);
+    } else {
+      _left = 0;
+    }
   }
 
-  // cases for left movement
-  else if (ir_bit_pattern == 0 || ir_bit_pattern == 0b1010) {
-    // Opponent detected on left
-    left(speedSet);
-    delay(delay_after_movement);
-    stop();
-    delay(delay_after_stop);
+  if (_right) {
+    current_time = millis();
+    if ((current_time - start_time) <= delay_after_movement) {
+      right(speedSet);
+    } else {
+      _right = 0;
+    }
   }
 
-  // cases for left + forward movement
-  else if (ir_bit_pattern == 0b0010 || ir_bit_pattern == 0b1000) {
-    // Opponent detected on left + front
-    left(speedSet);
-    delay(delay_after_movement);
-    forward(speedSet);
-    delay(delay_after_movement);
-    stop();
-    delay(delay_after_stop);
+  if (_stop) {
+    current_time = millis();
+    if ((current_time - start_time) <= delay_after_movement) {
+      stop();
+    } else {
+      _stop = 0;
+    }
   }
 
-  // cases for right + forward movement
-  else if (ir_bit_pattern == 0b0001 || ir_bit_pattern == 0b0100) {
-    // Opponent detected on right + front
-    right(speedSet);
-    delay(delay_after_movement);
-    forward(speedSet);
-    delay(delay_after_movement);
-    stop();
-    delay(delay_after_stop);
+  if (_left_forward) {
+    current_time = millis();
+    if ((current_time - start_time) <= delay_after_movement) {
+      left(speedSet);
+    } else if ((current_time - start_time) >= delay_after_movement && (current_time - start_time) <= (delay_after_movement + delay_after_movement)) {
+      forward(speedSet);
+    } else {
+      _left_forward = 0;
+    }
   }
 
-  // case to find the opponent if no IR signal is detected
-  else if (ir_bit_pattern == 0b1111) {
-    // No opponent detected
-    right(speedSet);
-    delay(delay_after_movement);
-    forward(speedSet);
-    delay(delay_after_movement);
-    // forward(speedSet);
-    // delay(delay_after_movement - 50);
-    // left(speedSet);
-    // delay(delay_after_movement);
-    // stop();
-    // delay(delay_after_stop);
+  if (_right_forward) {
+    current_time = millis();
+    if ((current_time - start_time) <= delay_after_movement) {
+      right(speedSet);
+    } else if (
+      (
+        (current_time - start_time) >= delay_after_movement) && 
+        ((current_time - start_time) <= (delay_after_movement + delay_after_movement)
+      )
+    ) {
+      forward(speedSet);
+    } else {
+      _right_forward = 0;
+    }
   }
+
+  // if (_find) {
+  //   current_time = millis();
+  //   if ((current_time - start_time) <= delay_after_movement) {
+  //     right(speedSet);
+  //   } else if (
+  //     (
+  //       (current_time - start_time) >= delay_after_movement) && 
+  //       ((current_time - start_time) <= (delay_after_movement + delay_after_movement)
+  //     )
+  //   ) {
+  //     forward(speedSet);
+  //   } else if (
+  //     (
+  //       (current_time - start_time) >= (delay_after_movement + delay_after_movement)) && 
+  //       ((current_time - start_time) <= (delay_after_movement + delay_after_movement + delay_after_movement)
+  //     )
+  //   ) {
+  //     left(speedSet);
+  //   } else  if (
+  //     (
+  //       (current_time - start_time) >= (delay_after_movement + delay_after_movement + delay_after_movement)) && 
+  //       ((current_time - start_time) <= (delay_after_movement + delay_after_movement + delay_after_movement + delay_after_movement)
+  //     )
+  //   ){
+  //     forward(speedSet);
+  //   } else {
+  //     _find = 0;
+  //   }
+  // }
+
 
 }
 
