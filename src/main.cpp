@@ -43,13 +43,21 @@
 #define DIRB 7 // Direction control for motor B
 #define PWMB 10 // PWM control (speed) for motor B
 
-int delayTime = 200; // Time (in milliseconds) to drive motors in loop()
+// delay variations
+int delay_after_movement = 200; // Time (in milliseconds) to drive motors in loop()
+int delay_after_stop = 200; // Time (in milliseconds) to drive motors in loop()
+
+// speed variations
 int speedSet = 100; // Speed setting (0-255) for motors in loop()
+
+// ir global variables
+byte ir_bit_pattern;
 
 void driveArdumoto(byte motor, byte dir, byte spd);
 void setupArdumoto();
 void stopArdumoto(byte motor);
 
+void test_motors(void);
 void forward(byte spd);
 void backward(byte spd);
 void left(byte spd);
@@ -66,29 +74,108 @@ void setup()
 
 void loop()
 {
-  // ir_test();
+  ir_test();
   // delay(500);
+  byte ir_bit_pattern = start_ir_reading();
 
+  // cases for front movement
+  if (ir_bit_pattern == 0b1100 || ir_bit_pattern == 0b1101 || ir_bit_pattern == 0b1110) {
+    // Opponent detected in front
+    forward(speedSet + 50);
+    delay(delay_after_movement);
+    stop();
+    delay(delay_after_stop);
+  }
+
+  // cases for back movement
+  else if (ir_bit_pattern == 0b0011 || ir_bit_pattern == 0b0111 || ir_bit_pattern == 0b1011) {
+    // Opponent detected in back
+    backward(speedSet + 50);
+    delay(delay_after_movement);
+    stop();
+    delay(delay_after_stop);
+  }
+
+  // cases for right movement
+  else if (ir_bit_pattern == 0b0101 || ir_bit_pattern == 0b0110 || ir_bit_pattern == 0b1001) {
+    // Opponent detected on right
+    right(speedSet);
+    delay(delay_after_movement);
+    stop();
+    delay(delay_after_stop);
+  }
+
+  // cases for left movement
+  else if (ir_bit_pattern == 0 || ir_bit_pattern == 0b1010) {
+    // Opponent detected on left
+    left(speedSet);
+    delay(delay_after_movement);
+    stop();
+    delay(delay_after_stop);
+  }
+
+  // cases for left + forward movement
+  else if (ir_bit_pattern == 0b0010 || ir_bit_pattern == 0b1000) {
+    // Opponent detected on left + front
+    left(speedSet);
+    delay(delay_after_movement);
+    forward(speedSet);
+    delay(delay_after_movement);
+    stop();
+    delay(delay_after_stop);
+  }
+
+  // cases for right + forward movement
+  else if (ir_bit_pattern == 0b0001 || ir_bit_pattern == 0b0100) {
+    // Opponent detected on right + front
+    right(speedSet);
+    delay(delay_after_movement);
+    forward(speedSet);
+    delay(delay_after_movement);
+    stop();
+    delay(delay_after_stop);
+  }
+
+  // case to find the opponent if no IR signal is detected
+  else if (ir_bit_pattern == 0b1111) {
+    // No opponent detected
+    forward(speedSet);
+    delay(delay_after_movement);
+    right(speedSet);
+    delay(delay_after_movement);
+    // forward(speedSet);
+    // delay(delay_after_movement - 50);
+    // left(speedSet);
+    // delay(delay_after_movement);
+    // stop();
+    // delay(delay_after_stop);
+  }
+
+}
+
+
+// Test driving each motor individually
+void test_motors()
+{
   forward(speedSet);
-  delay(delayTime);
+  delay(delay_after_movement);
   stop();
-  delay(delayTime);
+  delay(delay_after_stop);
 
   backward(speedSet);
-  delay(delayTime);
+  delay(delay_after_movement);
   stop();
-  delay(delayTime);
+  delay(delay_after_stop);
 
   left(speedSet);
-  delay(delayTime);
+  delay(delay_after_movement);
   stop();
+  delay(delay_after_stop);
 
-  delay(delayTime);
   right(speedSet);
-  delay(delayTime);
+  delay(delay_after_movement);
   stop();
-
-  delay(1000);
+  delay(delay_after_stop);
 }
 
 void forward(byte spd)

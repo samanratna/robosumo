@@ -26,6 +26,8 @@
 // void initIRSensors();
 // int readIRSensor(int index);
 void ir_setup(void);
+// void ir_read();
 int ir_test(void);
+byte start_ir_reading(void);
 
 #endif

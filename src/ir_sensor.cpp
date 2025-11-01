@@ -21,14 +21,13 @@ void ir_setup() {
   pinMode(IR_PIN_BACK_LEFT, INPUT);
 }
 
-void ir_read() {
-  int reading_front_right = digitalRead(IR_PIN_FRONT_RIGHT);
-  int reading_front_left  = digitalRead(IR_PIN_FRONT_LEFT);
-  int reading_back_right = digitalRead(IR_PIN_BACK_RIGHT);
-  int reading_back_left = digitalRead(IR_PIN_BACK_LEFT);
-}
 
 int ir_test() {
+
+  reading_front_right = digitalRead(IR_PIN_FRONT_RIGHT);
+  reading_front_left  = digitalRead(IR_PIN_FRONT_LEFT);
+  reading_back_right = digitalRead(IR_PIN_BACK_RIGHT);
+  reading_back_left = digitalRead(IR_PIN_BACK_LEFT);
 
   // Serial.print(reading_front_left); Serial.print("------"); Serial.print(reading_front_right);
   // Serial.println("");
@@ -38,26 +37,42 @@ int ir_test() {
   // Serial.print(reading_back_left); Serial.print("------"); Serial.print(reading_back_right);
   // Serial.println("");
   // Serial.println("");
+}
 
-  // case (reading_front_left + reading_front_right + reading_back_left + reading_back_right) {
-  //   case 0:
-  //     Serial.println("No line detected");
-  //     return DEFAULT;
-  //   case 1:
-  //     Serial.println("Move Forward");
-  //     return IR_FORWARD;
-  //   case 2:
-  //     Serial.println("Move Backward");
-  //     return IR_BACKWARD;
-  //   case 3:
-  //     Serial.println("Turn Right");
-  //     return IR_RIGHT;
-  //   case 4:
-  //     Serial.println("Turn Left");
-  //     return IR_LEFT;
-  //   default:
-  //     Serial.println("No valid movement detected");
-  //     return DEFAULT;
+byte start_ir_reading(void) {
+  
+  byte all_ir_bit_pattern = ((byte)reading_front_left << 3) | ((byte)reading_front_right << 2) | ((byte)reading_back_left << 1) | ((byte)reading_back_right);
+  Serial.print("IR Bit Pattern: "); Serial.println(all_ir_bit_pattern, BIN);
+
+  return all_ir_bit_pattern;
+
+  // // cases for front movement
+  // if (all_ir_bit_pattern == 0b1100 || all_ir_bit_pattern == 0b1101 || all_ir_bit_pattern == 0b1110) {
+  //   // Opponent detected in front
+  //   forward(150);
+  // }
+
+
+
+  // if (all_ir_bit_pattern == 0b0000) {
+  //   // No opponent detected
+  //   stop();
+  // }
+  // else if (all_ir_bit_pattern == 0b1100 || all_ir_bit_pattern == 0b1000 || all_ir_bit_pattern == 0b0100) {
+  //   // Opponent detected in front
+  //   forward(150);
+  // }
+  // else if (all_ir_bit_pattern == 0b0011 || all_ir_bit_pattern == 0b0001 || all_ir_bit_pattern == 0b0010) {
+  //   // Opponent detected at back
+  //   backward(150);
+  // }
+  // else if (all_ir_bit_pattern == 0b1001 || all_ir_bit_pattern == 0b1000) {
+  //   // Opponent detected at front-right
+  //   right(150);
+  // }
+  // else if (all_ir_bit_pattern == 0b0110 || all_ir_bit_pattern == 0b0100) {
+  //   // Opponent detected at front-left
+  //   left(150);
   // }
 }
 
