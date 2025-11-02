@@ -21,7 +21,7 @@ int delay_after_movement = 200;       // Time (in milliseconds) to drive motors 
 int delay_after_stop = 200;           // Time (in milliseconds) to drive motors in loop()
 
 // speed variations
-int speedSet = 100; // Speed setting (0-255) for motors in loop()
+int speedSet = 110; // Speed setting (0-255) for motors in loop()
 
 // ir global variables
 byte ir_bit_pattern;
@@ -83,6 +83,7 @@ void loop()
       _stop = 0;
       _left_forward = 0;
       _right_forward = 0;
+      _find = 0;
 
       start_time = millis();
     }
@@ -99,6 +100,7 @@ void loop()
       _stop = 0;
       _left_forward = 0;
       _right_forward = 0;
+      _find = 0;
 
       start_time = millis();
     }
@@ -115,6 +117,7 @@ void loop()
       _stop = 0;
       _left_forward = 0;
       _right_forward = 0;
+      _find = 0;
 
       start_time = millis();
     }
@@ -131,6 +134,7 @@ void loop()
       _stop = 0;
       _left_forward = 0;
       _right_forward = 0;
+      _find = 0;
 
       start_time = millis();
     }
@@ -146,6 +150,7 @@ void loop()
       _stop = 0;
       _left_forward = 1;
       _right_forward = 0;
+      _find = 0;
 
       start_time = millis();
     }
@@ -162,17 +167,25 @@ void loop()
       _stop = 0;
       _left_forward = 0;
       _right_forward = 1;
+      _find = 0;
 
       start_time = millis();
     }
   } 
   else if (ir_bit_pattern == 0b1111) {
 
+    Serial.println("search mode on");
+
     if (obstacle_direction != 0) {
+      Serial.println("Obstacle detected during search mode. Executing avoidance maneuver.");
       if (obstacle_direction == 1){
         Serial.println("Obstacle at FRONT detected! Moving forward with speed boost.");
-        forward(speedSet);
+        forward(speedSet-20);
       }
+      // } else if (obstacle_direction == 2){
+      //   Serial.println("Obstacle at BACK detected! Moving backward with speed boost.");
+      //   backward(speedSet);
+      // }
     } else {
 
       if (!_find) {
@@ -191,6 +204,7 @@ void loop()
   }
 
   if (_forward) {
+    Serial.println("Executing Forward Command");
     current_time = millis();
     if ((current_time - start_time) <= delay_after_movement) {
       forward(speedSet);
@@ -200,6 +214,7 @@ void loop()
   }
 
   if (_backward) {
+    Serial.println("Executing Backward Command");
     current_time = millis();
     if ((current_time - start_time) <= delay_after_movement) {
       backward(speedSet);
@@ -209,6 +224,7 @@ void loop()
   }
 
   if (_left) {
+    Serial.println("Executing Left Command");
     current_time = millis();
     if ((current_time - start_time) <= delay_after_movement) {
       left(speedSet);
@@ -218,6 +234,7 @@ void loop()
   }
 
   if (_right) {
+    Serial.println("Executing Right Movement");
     current_time = millis();
     if ((current_time - start_time) <= delay_after_movement) {
       right(speedSet);
@@ -227,6 +244,7 @@ void loop()
   }
 
   if (_stop) {
+    Serial.println("Executing Stop Command");
     current_time = millis();
     if ((current_time - start_time) <= delay_after_movement) {
       stop();
@@ -236,6 +254,7 @@ void loop()
   }
 
   if (_left_forward) {
+    Serial.println("Executing Left + Forward Movement");
     current_time = millis();
     if ((current_time - start_time) <= delay_after_movement) {
       left(speedSet);
@@ -247,6 +266,7 @@ void loop()
   }
 
   if (_right_forward) {
+    Serial.println("Executing Right + Forward Movement");
     current_time = millis();
     if ((current_time - start_time) <= delay_after_movement) {
       right(speedSet);
@@ -263,6 +283,7 @@ void loop()
   }
 
   if (_find) {
+    Serial.println("Executing search maneuver...");
     current_time = millis();
     if ((current_time - start_time) <= delay_after_movement) {
       right(speedSet);

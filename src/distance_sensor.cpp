@@ -34,9 +34,9 @@ int ultrasonic_checkObstacle() {
   long d_back = getDistanceCM(US4_TRIG, US4_ECHO);
 
   Serial.print("\nFront: "); Serial.print(d_front);
-  Serial.print(" | Back: "); Serial.print(d_back);
-  Serial.print(" | Left: "); Serial.print(d_left);
-  Serial.print(" | Right: "); Serial.println(d_right);
+  // Serial.print(" | Back: "); Serial.print(d_back);
+  // Serial.print(" | Left: "); Serial.print(d_left);
+  // Serial.print(" | Right: "); Serial.println(d_right);
 
   if (d_front > 0 && d_front < OBSTACLE_THRESHOLD_CM) {
     return OBSTACLE_FRONT;
