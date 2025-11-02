@@ -28,14 +28,14 @@ byte start_ir_reading(void) {
   reading_back_right = digitalRead(IR_PIN_BACK_RIGHT);
   reading_back_left = digitalRead(IR_PIN_BACK_LEFT);
 
-  // Serial.print(reading_front_left); Serial.print("------"); Serial.print(reading_front_right);
-  // Serial.println("");
-  // Serial.print(" || ");
-  // Serial.print(" || ");
-  // Serial.println("");
-  // Serial.print(reading_back_left); Serial.print("------"); Serial.print(reading_back_right);
-  // Serial.println("");
-  // Serial.println("");
+  Serial.print(reading_front_left); Serial.print("------"); Serial.print(reading_front_right);
+  Serial.println("");
+  Serial.print(" || ");
+  Serial.print(" || ");
+  Serial.println("");
+  Serial.print(reading_back_left); Serial.print("------"); Serial.print(reading_back_right);
+  Serial.println("");
+  Serial.println("");
   
   byte all_ir_bit_pattern = ((byte)reading_front_left << 3) | ((byte)reading_front_right << 2) | ((byte)reading_back_left << 1) | ((byte)reading_back_right);
   // Serial.print("IR Bit Pattern: "); Serial.println(all_ir_bit_pattern, BIN);

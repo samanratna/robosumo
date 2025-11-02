@@ -1,28 +1,8 @@
-    /* Ardumoto Example Sketch
-  by: Jim Lindblom
-  date: November 8, 2013
-  license: Public domain. Please use, reuse, and modify this 
-  sketch!
-
-  Adapted to v20 hardware by: Marshall Taylor
-  date: March 31, 2017
-  
-  Three useful functions are defined:
-    setupArdumoto() -- Setup the Ardumoto Shield pins
-    driveArdumoto([motor], [direction], [speed]) -- Drive [motor] 
-      (0 for A, 1 for B) in [direction] (0 or 1) at a [speed]
-      between 0 and 255. It will spin until told to stop.
-    stopArdumoto([motor]) -- Stop driving [motor] (0 or 1).
-
-  setupArdumoto() is called in the setup().
-  The loop() demonstrates use of the motor driving functions.
-*/
 #include <Arduino.h>
-#include "ir_sensor.h" // Include the IR sensor code
-// #include "distance_sensor.h"
+#include "ir_sensor.h"
+#include "distance_sensor.h"
 
 // Clockwise and counter-clockwise definitions.
-// Depending on how you wired your motors, you may need to swap.
 #define FORWARD  0
 #define REVERSE 1
 
@@ -30,14 +10,7 @@
 #define MOTOR_A 0
 #define MOTOR_B 1
 
-// Pin Assignments //
-//Default pins:
-// #define DIRA 2 // Direction control for motor A
-// #define PWMA 3  // PWM control (speed) for motor A
-// #define DIRB 4 // Direction control for motor B
-// #define PWMB 11 // PWM control (speed) for motor B
-
-////Alternate pins:
+// Alternate pins:
 #define DIRA 8 // Direction control for motor A
 #define PWMA 9 // PWM control (speed) for motor A
 #define DIRB 7 // Direction control for motor B
@@ -48,7 +21,7 @@ int delay_after_movement = 200;       // Time (in milliseconds) to drive motors 
 int delay_after_stop = 200;           // Time (in milliseconds) to drive motors in loop()
 
 // speed variations
-int speedSet = 130; // Speed setting (0-255) for motors in loop()
+int speedSet = 100; // Speed setting (0-255) for motors in loop()
 
 // ir global variables
 byte ir_bit_pattern;
@@ -85,15 +58,22 @@ void setup()
   Serial.begin(9600);
   setupArdumoto();    // Set all pins as outputs
   ir_setup();
-  // ultrasonic_setup();
+  ultrasonic_setup();
 }
 
 void loop()
 {
+  // delay(100);
   byte ir_bit_pattern = start_ir_reading();
+
+  uint8_t obstacle_direction = ultrasonic_checkObstacle();
+
+  // Serial.println("Obstacle Direction: " + String(obstacle_direction));
+  // Serial.println("IR Bit Pattern: " + String(ir_bit_pattern, BIN));
 
   if (ir_bit_pattern == 0b1100 || ir_bit_pattern == 0b1101 || ir_bit_pattern == 0b1110) {   // cases for forward movement
     
+    Serial.println("IR: FORWARD");
     if (!_forward) {
 
       _forward = 1;
@@ -109,6 +89,7 @@ void loop()
 
   } else if (ir_bit_pattern == 0b0011 || ir_bit_pattern == 0b0111 || ir_bit_pattern == 0b1011) {  // cases for back movement
 
+    Serial.println("Backward command ignored to prevent collision.");
     if (!_backward) {
 
       _forward = 0;
@@ -124,6 +105,7 @@ void loop()
 
   } else if (ir_bit_pattern == 0b0101 || ir_bit_pattern == 0b0110 || ir_bit_pattern == 0b1001) {  // cases for right movement
 
+    Serial.println("Right movement triggered");
     if (!_right) {
 
       _forward = 0;
@@ -139,6 +121,7 @@ void loop()
 
   } else if (ir_bit_pattern == 0 || ir_bit_pattern == 0b1010) {   // cases for left movement
 
+    Serial.println("Left movement triggered.");
     if (!_left) {
 
       _forward = 0;
@@ -153,6 +136,7 @@ void loop()
     }
 
   } else if (ir_bit_pattern == 0b0010 || ir_bit_pattern == 0b1000) {  // cases for left + forward movement
+    Serial.println("Left + Forward Movement");
     if (!_left_forward) {
 
       _forward = 0;
@@ -166,8 +150,9 @@ void loop()
       start_time = millis();
     }
 
-  } else if (ir_bit_pattern == 0b0001 || ir_bit_pattern == 0b0100 || ir_bit_pattern == 0b1111) {   // cases for right + forward movement
+  } else if (ir_bit_pattern == 0b0001 || ir_bit_pattern == 0b0100) {   // cases for right + forward movement
 
+    Serial.println("Right Forward Movement Triggered");
     if (!_right_forward) {
 
       _forward = 0;
@@ -181,22 +166,29 @@ void loop()
       start_time = millis();
     }
   } 
-  // else if (ir_bit_pattern == 0b1111) {
+  else if (ir_bit_pattern == 0b1111) {
 
-  //   if (!_find) {
+    if (obstacle_direction != 0) {
+      if (obstacle_direction == 1){
+        Serial.println("Obstacle at FRONT detected! Moving forward with speed boost.");
+        forward(speedSet);
+      }
+    } else {
 
-  //     _find = 1;
-  //     _forward = 0;
-  //     _backward = 0;
-  //     _left = 0;
-  //     _right = 0;
-  //     _stop = 0;
-  //     _left_forward = 0;
-  //     _right_forward = 0;
+      if (!_find) {
+          _find = 1;
+          _forward = 0;
+          _backward = 0;
+          _left = 0;
+          _right = 0;
+          _stop = 0;
+          _left_forward = 0;
+          _right_forward = 0;
 
-  //     start_time = millis();
-  //   }
-  // }
+          start_time = millis();
+        }
+      }
+  }
 
   if (_forward) {
     current_time = millis();
@@ -267,6 +259,22 @@ void loop()
       forward(speedSet);
     } else {
       _right_forward = 0;
+    }
+  }
+
+  if (_find) {
+    current_time = millis();
+    if ((current_time - start_time) <= delay_after_movement) {
+      right(speedSet);
+    } else if (
+      (
+        (current_time - start_time) >= delay_after_movement) && 
+        ((current_time - start_time) <= (delay_after_movement + delay_after_movement)
+      )
+    ) {
+      forward(speedSet);
+    } else {
+      _find = 0;
     }
   }
 

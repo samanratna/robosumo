@@ -27,7 +27,7 @@
 #define NONE   0
 
 // === Function declarations ===
-void ultrasonic_setup();
+void ultrasonic_setup(void);
 long getDistanceCM(int trigPin, int echoPin);
 int ultrasonic_checkObstacle();   // returns FRONT/BACK/LEFT/RIGHT/NONE
 
