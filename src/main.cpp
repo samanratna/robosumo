@@ -350,7 +350,7 @@ void loop()
   
   } else if (drive_mode == MANUAL) {
 
-    // ultrasonic_checkObstacle();
+    ultrasonic_checkObstacle();
     // Bluetooth → Serial Monitor
     if (BTSerial.available()) {
 
