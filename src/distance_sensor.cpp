@@ -1,15 +1,15 @@
 #include "distance_sensor.h"
 
 void ultrasonic_setup() {
-  pinMode(US1_TRIG, OUTPUT);
-  pinMode(US2_TRIG, OUTPUT);
+  // pinMode(US1_TRIG, OUTPUT);
+  // pinMode(US2_TRIG, OUTPUT);
   pinMode(US3_TRIG, OUTPUT);
-  pinMode(US4_TRIG, OUTPUT);
+  // pinMode(US4_TRIG, OUTPUT);
 
-  pinMode(US1_ECHO, INPUT);
-  pinMode(US2_ECHO, INPUT);
+  // pinMode(US1_ECHO, INPUT);
+  // pinMode(US2_ECHO, INPUT);
   pinMode(US3_ECHO, INPUT);
-  pinMode(US4_ECHO, INPUT);
+  // pinMode(US4_ECHO, INPUT);
 
   Serial.println("Ultrasonic sensors initialized...");
 }
@@ -28,10 +28,10 @@ long getDistanceCM(int trigPin, int echoPin) {
 }
 
 int ultrasonic_checkObstacle() {
-  long d_left = getDistanceCM(US1_TRIG, US1_ECHO);
-  long d_right  = getDistanceCM(US2_TRIG, US2_ECHO);
+  // long d_left = getDistanceCM(US1_TRIG, US1_ECHO);
+  // long d_right  = getDistanceCM(US2_TRIG, US2_ECHO);
   long d_front  = getDistanceCM(US3_TRIG, US3_ECHO);
-  long d_back = getDistanceCM(US4_TRIG, US4_ECHO);
+  // long d_back = getDistanceCM(US4_TRIG, US4_ECHO);
 
   Serial.print("\nFront: "); Serial.print(d_front);
   // Serial.print(" | Back: "); Serial.print(d_back);
