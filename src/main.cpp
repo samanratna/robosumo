@@ -83,91 +83,91 @@ void loop()
   int drive_mode = digitalRead(12);
   Serial.print("Button state: "); Serial.println(drive_mode);
 
-  // if (drive_mode == MANUAL) {
+  if (drive_mode == MANUAL) {
 
-  //   Serial.println("Manual Mode Activated");
+    Serial.println("Manual Mode Activated");
   
-  // } 
+  } 
   
-  // else if (drive_mode == AUTONOMOUS) {
+  else if (drive_mode == AUTONOMOUS) {
 
-  //   ir_test();
-  //   // delay(500);
-  //   byte ir_bit_pattern = start_ir_reading();
+    ir_test();
+    // delay(500);
+    byte ir_bit_pattern = start_ir_reading();
 
-  //   // cases for front movement
-  //   if (ir_bit_pattern == 0b1100 || ir_bit_pattern == 0b1101 || ir_bit_pattern == 0b1110) {
-  //     // Opponent detected in front
-  //     forward(speedSet + 40);
-  //     delay(delay_after_movement);
-  //     stop();
-  //     delay(delay_after_stop);
-  //   }
+    // cases for front movement
+    if (ir_bit_pattern == 0b1100 || ir_bit_pattern == 0b1101 || ir_bit_pattern == 0b1110) {
+      // Opponent detected in front
+      forward(speedSet + 40);
+      delay(delay_after_movement);
+      stop();
+      delay(delay_after_stop);
+    }
 
-  //   // cases for back movement
-  //   else if (ir_bit_pattern == 0b0011 || ir_bit_pattern == 0b0111 || ir_bit_pattern == 0b1011) {
-  //     // Opponent detected in back
-  //     backward(speedSet);
-  //     delay(delay_after_movement+30);
-  //     stop();
-  //     delay(delay_after_stop);
-  //   }
+    // cases for back movement
+    else if (ir_bit_pattern == 0b0011 || ir_bit_pattern == 0b0111 || ir_bit_pattern == 0b1011) {
+      // Opponent detected in back
+      backward(speedSet);
+      delay(delay_after_movement+30);
+      stop();
+      delay(delay_after_stop);
+    }
 
-  //   // cases for right movement
-  //   else if (ir_bit_pattern == 0b0101 || ir_bit_pattern == 0b0110 || ir_bit_pattern == 0b1001) {
-  //     // Opponent detected on right
-  //     right(speedSet);
-  //     delay(delay_after_movement);
-  //     stop();
-  //     delay(delay_after_stop);
-  //   }
+    // cases for right movement
+    else if (ir_bit_pattern == 0b0101 || ir_bit_pattern == 0b0110 || ir_bit_pattern == 0b1001) {
+      // Opponent detected on right
+      right(speedSet);
+      delay(delay_after_movement);
+      stop();
+      delay(delay_after_stop);
+    }
 
-  //   // cases for left movement
-  //   else if (ir_bit_pattern == 0 || ir_bit_pattern == 0b1010) {
-  //     // Opponent detected on left
-  //     left(speedSet);
-  //     delay(delay_after_movement);
-  //     stop();
-  //     delay(delay_after_stop);
-  //   }
+    // cases for left movement
+    else if (ir_bit_pattern == 0 || ir_bit_pattern == 0b1010) {
+      // Opponent detected on left
+      left(speedSet);
+      delay(delay_after_movement);
+      stop();
+      delay(delay_after_stop);
+    }
 
-  //   // cases for left + forward movement
-  //   else if (ir_bit_pattern == 0b0010 || ir_bit_pattern == 0b1000) {
-  //     // Opponent detected on left + front
-  //     left(speedSet);
-  //     delay(delay_after_movement);
-  //     forward(speedSet);
-  //     delay(delay_after_movement);
-  //     stop();
-  //     delay(delay_after_stop);
-  //   }
+    // cases for left + forward movement
+    else if (ir_bit_pattern == 0b0010 || ir_bit_pattern == 0b1000) {
+      // Opponent detected on left + front
+      left(speedSet);
+      delay(delay_after_movement);
+      forward(speedSet);
+      delay(delay_after_movement);
+      stop();
+      delay(delay_after_stop);
+    }
 
-  //   // cases for right + forward movement
-  //   else if (ir_bit_pattern == 0b0001 || ir_bit_pattern == 0b0100) {
-  //     // Opponent detected on right + front
-  //     right(speedSet);
-  //     delay(delay_after_movement);
-  //     forward(speedSet);
-  //     delay(delay_after_movement);
-  //     stop();
-  //     delay(delay_after_stop);
-  //   }
+    // cases for right + forward movement
+    else if (ir_bit_pattern == 0b0001 || ir_bit_pattern == 0b0100) {
+      // Opponent detected on right + front
+      right(speedSet);
+      delay(delay_after_movement);
+      forward(speedSet);
+      delay(delay_after_movement);
+      stop();
+      delay(delay_after_stop);
+    }
 
-  //   // case to find the opponent if no IR signal is detected
-  //   else if (ir_bit_pattern == 0b1111) {
-  //     // No opponent detected
-  //     right(speedSet);
-  //     delay(delay_after_movement);
-  //     forward(speedSet);
-  //     delay(delay_after_movement);
-  //     // forward(speedSet);
-  //     // delay(delay_after_movement - 50);
-  //     // left(speedSet);
-  //     // delay(delay_after_movement);
-  //     // stop();
-  //     // delay(delay_after_stop);
-  //   }
-  // }
+    // case to find the opponent if no IR signal is detected
+    else if (ir_bit_pattern == 0b1111) {
+      // No opponent detected
+      right(speedSet);
+      delay(delay_after_movement);
+      forward(speedSet);
+      delay(delay_after_movement);
+      // forward(speedSet);
+      // delay(delay_after_movement - 50);
+      // left(speedSet);
+      // delay(delay_after_movement);
+      // stop();
+      // delay(delay_after_stop);
+    }
+  }
 }
 
 
